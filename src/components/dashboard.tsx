@@ -22,11 +22,13 @@ import { MentorView } from './views/mentor';
 import { Logo } from './icons';
 import { Compass, UserCircle, Bot, LogOut, PanelLeft, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useAuth } from '@/hooks/use-auth';
 
 type View = 'discover' | 'my-profile' | 'mentor';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
+  const { user, logout } = useAuth();
   const currentUser = MOCK_USERS[0]; // Mock logged-in user
 
   const viewTitles: Record<View, string> = {
@@ -91,18 +93,18 @@ export function Dashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
-                    <AvatarImage src={currentUser.avatar} alt={currentUser.name} data-ai-hint="person portrait" />
-                    <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={user?.photoURL || currentUser.avatar} alt={user?.displayName || currentUser.name} data-ai-hint="person portrait" />
+                    <AvatarFallback>{user?.displayName?.charAt(0) || currentUser.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{currentUser.name}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.displayName || currentUser.name}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -121,20 +123,6 @@ export function Dashboard() {
 
 function ThemeToggle() {
   const { setTheme, theme } = useTheme();
-
-  // The useTheme hook from next-themes might return undefined initially.
-  // We'll add a check to avoid hydration mismatch, though next-themes handles this well.
-  const [mounted, setMounted] = useState(false);
-  useState(() => setMounted(true));
-
-  if (!mounted) {
-    return (
-      <Button variant="ghost" size="icon" className="h-10 w-10" disabled>
-        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      </Button>
-    )
-  }
 
   return (
     <Button
