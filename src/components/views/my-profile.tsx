@@ -16,6 +16,7 @@ import { suggestSkills } from '@/ai/flows/suggest-skills';
 import type { Skill } from '@/lib/types';
 import { StarRating } from '../star-rating';
 import { Separator } from '../ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 const skillValidationSchema = z.object({
   skill: z.string().min(2, { message: "Skill name must be at least 2 characters." }),
