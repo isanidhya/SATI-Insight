@@ -1,0 +1,151 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MOCK_USERS } from '@/lib/mock-data';
+import { DiscoverView } from './views/discover';
+import { MyProfileView } from './views/my-profile';
+import { MentorView } from './views/mentor';
+import { Logo } from './icons';
+import { Compass, UserCircle, Bot, LogOut, PanelLeft, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
+
+type View = 'discover' | 'my-profile' | 'mentor';
+
+export function Dashboard() {
+  const [activeView, setActiveView] = useState<View>('discover');
+  const currentUser = MOCK_USERS[0]; // Mock logged-in user
+
+  const viewTitles: Record<View, string> = {
+    discover: 'Discover Talent',
+    'my-profile': 'My Profile',
+    mentor: 'AI Mentor',
+  };
+
+  const renderView = () => {
+    switch (activeView) {
+      case 'my-profile':
+        return <MyProfileView />;
+      case 'mentor':
+        return <MentorView />;
+      case 'discover':
+      default:
+        return <DiscoverView />;
+    }
+  };
+  
+  return (
+    <div className="flex min-h-screen w-full">
+      <Sidebar>
+        <SidebarHeader className="p-4">
+          <div className="flex items-center gap-2">
+            <Logo className="h-8 w-8 text-primary" />
+            <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
+              SATIInsight
+            </span>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveView('discover')} isActive={activeView === 'discover'} tooltip="Discover">
+                <Compass />
+                <span>Discover</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveView('my-profile')} isActive={activeView === 'my-profile'} tooltip="My Profile">
+                <UserCircle />
+                <span>My Profile</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveView('mentor')} isActive={activeView === 'mentor'} tooltip="AI Mentor">
+                <Bot />
+                <span>AI Mentor</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+      </Sidebar>
+      <div className="flex flex-1 flex-col">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
+          <SidebarTrigger className="md:hidden" />
+          <h1 className="text-2xl font-semibold">{viewTitles[activeView]}</h1>
+          <div className="ml-auto flex items-center gap-4">
+            <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar>
+                    <AvatarImage src={currentUser.avatar} alt={currentUser.name} data-ai-hint="person portrait" />
+                    <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{currentUser.name}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuItem>Support</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+            {renderView()}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+
+function ThemeToggle() {
+  const { setTheme, theme } = useTheme();
+
+  // The useTheme hook from next-themes might return undefined initially.
+  // We'll add a check to avoid hydration mismatch, though next-themes handles this well.
+  const [mounted, setMounted] = useState(false);
+  useState(() => setMounted(true));
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className="h-10 w-10" disabled>
+        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      </Button>
+    )
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-10 w-10"
+      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+    >
+      <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  );
+}
