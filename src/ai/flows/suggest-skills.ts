@@ -1,26 +1,18 @@
-// src/ai/flows/suggest-skills.ts
 'use server';
 /**
  * @fileOverview AI flow for suggesting skills based on project descriptions and public data.
  *
  * - suggestSkills - A function that suggests skills based on project descriptions and public data.
- * - SuggestSkillsInput - The input type for the suggestSkills function.
- * - SuggestSkillsOutput - The return type for the suggestSkills function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import {
+  SuggestSkillsInputSchema,
+  type SuggestSkillsInput,
+  SuggestSkillsOutputSchema,
+  type SuggestSkillsOutput,
+} from '@/lib/ai-types';
 
-const SuggestSkillsInputSchema = z.object({
-  projectDescriptions: z.array(z.string()).describe('A list of project descriptions.'),
-  publicData: z.string().describe('Any public data available about the student.'),
-});
-export type SuggestSkillsInput = z.infer<typeof SuggestSkillsInputSchema>;
-
-const SuggestSkillsOutputSchema = z.object({
-  suggestedSkills: z.array(z.string()).describe('A list of suggested skills based on the project descriptions and public data.'),
-});
-export type SuggestSkillsOutput = z.infer<typeof SuggestSkillsOutputSchema>;
 
 export async function suggestSkills(input: SuggestSkillsInput): Promise<SuggestSkillsOutput> {
   return suggestSkillsFlow(input);

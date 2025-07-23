@@ -1,21 +1,17 @@
-// This file contains the Genkit flow for validating student skills based on provided proofs.
-
 'use server';
+/**
+ * @fileOverview This file contains the Genkit flow for validating student skills based on provided proofs.
+ *
+ * - validateSkills - A function that validates a skill based on proof.
+ */
+import { ai } from '@/ai/genkit';
+import {
+  ValidateSkillsInputSchema,
+  type ValidateSkillsInput,
+  ValidateSkillsOutputSchema,
+  type ValidateSkillsOutput,
+} from '@/lib/ai-types';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const ValidateSkillsInputSchema = z.object({
-  skill: z.string().describe('The skill to validate.'),
-  proof: z.string().describe('Link to verified project or public data as proof of skill.'),
-});
-export type ValidateSkillsInput = z.infer<typeof ValidateSkillsInputSchema>;
-
-const ValidateSkillsOutputSchema = z.object({
-  skillRating: z.number().min(1).max(5).describe('A rating from 1 to 5 stars representing the validated skill level.'),
-  feedback: z.string().describe('Personalized feedback and improvement tips.'),
-});
-export type ValidateSkillsOutput = z.infer<typeof ValidateSkillsOutputSchema>;
 
 export async function validateSkills(input: ValidateSkillsInput): Promise<ValidateSkillsOutput> {
   return validateSkillsFlow(input);

@@ -5,22 +5,19 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MOCK_USERS } from '@/lib/mock-data';
 import { DiscoverView } from './views/discover';
 import { MyProfileView } from './views/my-profile';
 import { MentorView } from './views/mentor';
 import { Logo } from './icons';
-import { Compass, UserCircle, Bot, LogOut, PanelLeft, Sun, Moon } from 'lucide-react';
+import { Compass, UserCircle, Bot, LogOut, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -29,7 +26,6 @@ type View = 'discover' | 'my-profile' | 'mentor';
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
   const { user, logout } = useAuth();
-  const currentUser = MOCK_USERS[0]; // Mock logged-in user
 
   const viewTitles: Record<View, string> = {
     discover: 'Discover Talent',
@@ -93,13 +89,13 @@ export function Dashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
-                    <AvatarImage src={user?.photoURL || currentUser.avatar} alt={user?.displayName || currentUser.name} data-ai-hint="person portrait" />
-                    <AvatarFallback>{user?.displayName?.charAt(0) || currentUser.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || ''} data-ai-hint="person portrait" />
+                    <AvatarFallback>{user?.displayName?.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user?.displayName || currentUser.name}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.displayName}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>

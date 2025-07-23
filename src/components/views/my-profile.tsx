@@ -4,19 +4,19 @@ import { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { MOCK_USERS } from '@/lib/mock-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { validateSkills, ValidateSkillsInput } from '@/ai/flows/validate-skills';
+import { validateSkills } from '@/ai/flows/validate-skills';
 import { suggestSkills } from '@/ai/flows/suggest-skills';
-import type { Skill } from '@/lib/types';
+import type { Skill, Project } from '@/lib/types';
 import { StarRating } from '../star-rating';
 import { Separator } from '../ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/use-auth';
 
 const skillValidationSchema = z.object({
   skill: z.string().min(2, { message: "Skill name must be at least 2 characters." }),
@@ -25,7 +25,22 @@ const skillValidationSchema = z.object({
 
 export function MyProfileView() {
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState(MOCK_USERS[0]);
+  const { user } = useAuth();
+  
+  // This is a placeholder since we don't have a database for this yet.
+  const [skills, setSkills] = useState<Skill[]>([
+        { name: 'React', rating: 4, verified: true, proof: 'https://github.com/johndoe/project-x' },
+        { name: 'Node.js', rating: 5, verified: true, proof: 'https://github.com/johndoe/project-y' },
+        { name: 'TypeScript', rating: 3, verified: true, proof: 'https://github.com/johndoe/project-z' },
+        { name: 'SQL', rating: 2, verified: false },
+    ]);
+  const [projects, setProjects] = useState<Project[]>([
+        { name: 'Project X', description: 'A full-stack web application using React and Node.js.', link: 'https://github.com/johndoe/project-x' },
+        { name: 'Project Y', description: 'A mobile app built with React Native and TypeScript.', link: 'https://github.com/johndoe/project-y' },
+    ]);
+  const [academicYear, setAcademicYear] = useState(3);
+
+
   const [isValidating, setIsValidating] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
@@ -48,10 +63,8 @@ export function MyProfileView() {
         proof: values.proof,
         verified: true,
       };
-      setCurrentUser(prev => ({
-        ...prev,
-        skills: [...prev.skills, newSkill]
-      }))
+      setSkills(prev => [...prev, newSkill]);
+
       toast({
         title: `Skill "${values.skill}" validated!`,
         description: `You've been rated ${result.skillRating} stars. Feedback: ${result.feedback}`,
@@ -73,8 +86,8 @@ export function MyProfileView() {
     setSuggestedSkills([]);
     try {
       const result = await suggestSkills({
-        projectDescriptions: currentUser.projects.map(p => p.description),
-        publicData: `The user is a year ${currentUser.academicYear} student.`,
+        projectDescriptions: projects.map(p => p.description),
+        publicData: `The user is a year ${academicYear} student.`,
       });
       setSuggestedSkills(result.suggestedSkills);
       toast({
@@ -100,7 +113,7 @@ export function MyProfileView() {
           <CardDescription>Manage your verified and unverified skills.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-            {currentUser.skills.map((skill, index) => (
+            {skills.map((skill, index) => (
               <div key={index} className="flex items-center justify-between p-2 rounded-md transition-colors hover:bg-muted/50">
                 <div>
                   <p className="font-medium">{skill.name}</p>

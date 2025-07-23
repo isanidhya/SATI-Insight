@@ -4,25 +4,15 @@
  * @fileOverview AI mentor that provides personalized feedback and improvement tips to students based on their weekly activity and skills.
  *
  * - getMentorFeedback - A function that generates personalized feedback for a student.
- * - MentorFeedbackInput - The input type for the getMentorFeedback function.
- * - MentorFeedbackOutput - The return type for the getMentorFeedback function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const MentorFeedbackInputSchema = z.object({
-  weeklyActivity: z
-    .string()
-    .describe('Description of the student\'s activities during the week.'),
-  skills: z.array(z.string()).describe('List of skills the student possesses.'),
-});
-export type MentorFeedbackInput = z.infer<typeof MentorFeedbackInputSchema>;
-
-const MentorFeedbackOutputSchema = z.object({
-  feedback: z.string().describe('Personalized feedback and improvement tips for the student.'),
-});
-export type MentorFeedbackOutput = z.infer<typeof MentorFeedbackOutputSchema>;
+import { ai } from '@/ai/genkit';
+import {
+  MentorFeedbackInputSchema,
+  type MentorFeedbackInput,
+  MentorFeedbackOutputSchema,
+  type MentorFeedbackOutput,
+} from '@/lib/ai-types';
 
 export async function getMentorFeedback(input: MentorFeedbackInput): Promise<MentorFeedbackOutput> {
   return mentorFeedbackFlow(input);
