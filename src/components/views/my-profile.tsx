@@ -32,7 +32,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email(),
+  email: z.string().email().refine(email => email.endsWith('@satiengg.in'), {
+    message: 'Email must be a valid SATI email address (ends with @satiengg.in)',
+  }),
   branch: z.string().min(2, 'Branch is required'),
   year: z.coerce.number().min(1).max(5),
   githubUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
