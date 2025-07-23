@@ -26,7 +26,7 @@ import { useState, useEffect } from 'react';
 import { analyzeAndBuildProfile } from '@/ai/actions/onboarding';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfile } from '@/lib/firebase';
-import { Github, Linkedin, Code, Loader2, User, Mail, School, Calendar, Save } from 'lucide-react';
+import { Github, Linkedin, Code, Loader2, User, Mail, School, Calendar, Save, Edit, X } from 'lucide-react';
 import { StarRating } from '../star-rating';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -44,6 +44,7 @@ export function MyProfile() {
   const { user, profile, loading, refreshProfile } = useUser();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -71,7 +72,7 @@ export function MyProfile() {
         leetcodeUrl: profile.leetcodeUrl || '',
       });
     }
-  }, [profile, form]);
+  }, [profile, form, isEditing]); // Rerun when editing is toggled to reset form if needed
 
   async function handleProfileUpdate(values: z.infer<typeof profileSchema>) {
      if (!user) {
@@ -80,14 +81,10 @@ export function MyProfile() {
     }
     setIsSaving(true);
     try {
-        await updateUserProfile(user.uid, {
-            name: values.name,
-            email: values.email,
-            branch: values.branch,
-            year: values.year
-        });
+        await updateUserProfile(user.uid, values);
         toast({ title: 'Profile Saved!', description: 'Your personal details have been updated.' });
-        refreshProfile();
+        await refreshProfile();
+        setIsEditing(false);
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Save Failed', description: error.message });
     } finally {
@@ -114,7 +111,7 @@ export function MyProfile() {
         leetcodeUrl: values.leetcodeUrl,
       });
 
-      // Also save the URLs themselves
+      // Also save the URLs themselves along with the AI data
       await updateUserProfile(user.uid, {
         githubUrl: values.githubUrl,
         linkedinUrl: values.linkedinUrl,
@@ -123,7 +120,8 @@ export function MyProfile() {
       });
 
       toast({ title: 'Profile Analyzed!', description: 'Your skill portfolio has been successfully updated.' });
-      refreshProfile();
+      await refreshProfile();
+      setIsEditing(false);
 
     } catch (error: any) {
       toast({ variant: "destructive", title: 'Analysis Failed', description: error.message });
@@ -138,6 +136,8 @@ export function MyProfile() {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
+  const allLinksEmpty = !form.watch('githubUrl') && !form.watch('linkedinUrl') && !form.watch('leetcodeUrl');
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div>
@@ -148,23 +148,36 @@ export function MyProfile() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleProfileUpdate)} className="space-y-6">
             <Card>
-                <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>Update your personal and academic details.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Personal Information</CardTitle>
+                        <CardDescription>Update your personal and academic details.</CardDescription>
+                    </div>
+                     {!isEditing && (
+                        <Button type="button" variant="outline" onClick={() => setIsEditing(true)}><Edit className="mr-2 h-4 w-4"/> Edit Profile</Button>
+                    )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="flex items-center gap-2"><User/> Name</FormLabel>
-                                <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
+                                {isEditing ? (
+                                    <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
+                                ) : (
+                                    <p className="p-2 text-muted-foreground">{field.value || '-'}</p>
+                                )}
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="email" render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="flex items-center gap-2"><Mail/> College Email</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
+                                {isEditing ? (
+                                    <FormControl><Input {...field} /></FormControl>
+                                ) : (
+                                    <p className="p-2 text-muted-foreground">{field.value || '-'}</p>
+                                )}
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -173,47 +186,109 @@ export function MyProfile() {
                         <FormField control={form.control} name="branch" render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="flex items-center gap-2"><School/> Branch</FormLabel>
-                                 <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="CSE">CSE</SelectItem>
-                                      <SelectItem value="IT">IT</SelectItem>
-                                      <SelectItem value="AIADS">AI & Data Science</SelectItem>
-                                      <SelectItem value="AIML">AI & Machine Learning</SelectItem>
-                                      <SelectItem value="Cyber Security">Cyber Security</SelectItem>
-                                      <SelectItem value="IOT">Internet of Things (IoT)</SelectItem>
-                                      <SelectItem value="EC">Electronics & Communication</SelectItem>
-                                      <SelectItem value="EE">Electrical Engineering</SelectItem>
-                                      <SelectItem value="Mechanical">Mechanical Engineering</SelectItem>
-                                      <SelectItem value="Civil">Civil Engineering</SelectItem>
-                                      <SelectItem value="Other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                 {isEditing ? (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="CSE">CSE</SelectItem>
+                                          <SelectItem value="IT">IT</SelectItem>
+                                          <SelectItem value="AIADS">AI & Data Science</SelectItem>
+                                          <SelectItem value="AIML">AI & Machine Learning</SelectItem>
+                                          <SelectItem value="Cyber Security">Cyber Security</SelectItem>
+                                          <SelectItem value="IOT">Internet of Things (IoT)</SelectItem>
+                                          <SelectItem value="EC">Electronics & Communication</SelectItem>
+                                          <SelectItem value="EE">Electrical Engineering</SelectItem>
+                                          <SelectItem value="Mechanical">Mechanical Engineering</SelectItem>
+                                          <SelectItem value="Civil">Civil Engineering</SelectItem>
+                                          <SelectItem value="Other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                 ) : (
+                                     <p className="p-2 text-muted-foreground">{field.value || '-'}</p>
+                                 )}
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="year" render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="flex items-center gap-2"><Calendar/> Academic Year</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} value={String(field.value)}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                    {[1, 2, 3, 4, 5].map(y => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                                {isEditing ? (
+                                    <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} value={String(field.value)}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                        {[1, 2, 3, 4, 5].map(y => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <p className="p-2 text-muted-foreground">Year {field.value || '-'}</p>
+                                )}
                                 <FormMessage />
                             </FormItem>
                         )} />
                      </div>
                 </CardContent>
-                <CardFooter>
+            </Card>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Professional Profiles</CardTitle>
+                    <CardDescription>
+                        Provide links to your professional profiles. Our AI will analyze them to build and update your skill portfolio.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <FormField control={form.control} name="githubUrl" render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="flex items-center gap-2"><Github />GitHub Profile URL</FormLabel>
+                         {isEditing ? (
+                            <FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl>
+                         ) : (
+                             <p className="p-2 text-muted-foreground">{field.value || 'Not provided'}</p>
+                         )}
+                        <FormMessage />
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="linkedinUrl" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Linkedin />LinkedIn Profile URL</FormLabel>
+                            {isEditing ? (
+                                <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
+                            ) : (
+                                <p className="p-2 text-muted-foreground">{field.value || 'Not provided'}</p>
+                            )}
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="leetcodeUrl" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Code />LeetCode Profile URL</FormLabel>
+                            {isEditing ? (
+                                <FormControl><Input placeholder="https://leetcode.com/username" {...field} /></FormControl>
+                            ) : (
+                                <p className="p-2 text-muted-foreground">{field.value || 'Not provided'}</p>
+                            )}
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                </CardContent>
+          </Card>
+
+            {isEditing && (
+                <div className="flex justify-end gap-2">
+                     <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>
+                        <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
                     <Button type="submit" disabled={isSaving}>
                         {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         <Save className="mr-2 h-4 w-4" />
                         Save Changes
                     </Button>
-                </CardFooter>
-            </Card>
+                    <Button type="button" onClick={form.handleSubmit(handleAnalysis)} disabled={isAnalyzing || allLinksEmpty}>
+                        {isAnalyzing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isAnalyzing ? 'Analyzing...' : (hasBeenAnalyzed ? 'Re-analyze Profile' : 'Analyze Profile')}
+                    </Button>
+                </div>
+            )}
         </form>
 
         <Card>
@@ -239,7 +314,7 @@ export function MyProfile() {
             ) : (
                 <div className="text-center py-8">
                 <p className="text-muted-foreground">No skills analyzed yet.</p>
-                <p className="text-sm text-muted-foreground">Add your profile links below and click "Analyze Profile" to get started.</p>
+                <p className="text-sm text-muted-foreground">Click "Edit Profile", add your profile links, and then click "Analyze Profile" to get started.</p>
                 </div>
             )}
             </CardContent>
@@ -250,58 +325,6 @@ export function MyProfile() {
                 </CardFooter>
             )}
         </Card>
-
-        <form onSubmit={form.handleSubmit(handleAnalysis)} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Professional Profiles</CardTitle>
-              <CardDescription>
-                Provide links to your professional profiles. Our AI will analyze them to build and update your skill portfolio.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="githubUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2"><Github />GitHub Profile URL</FormLabel>
-                      <FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              <FormField
-                control={form.control}
-                name="linkedinUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2"><Linkedin />LinkedIn Profile URL</FormLabel>
-                    <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
-                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="leetcodeUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2"><Code />LeetCode Profile URL</FormLabel>
-                    <FormControl><Input placeholder="https://leetcode.com/username" {...field} /></FormControl>
-                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isAnalyzing}>
-                {isAnalyzing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isAnalyzing ? 'Analyzing...' : (hasBeenAnalyzed ? 'Re-analyze Profile' : 'Analyze Profile')}
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
       </Form>
     </div>
   );
