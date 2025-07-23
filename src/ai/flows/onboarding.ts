@@ -6,17 +6,41 @@
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { scrapeWebsite } from '../tools/web-scraper';
-import { OnboardingInputSchema, OnboardingOutputSchema, type OnboardingInput, type OnboardingOutput } from '@/lib/ai-types';
+import { OnboardingInputSchema, OnboardingOutputSchema } from '@/lib/ai-types';
+import { getGithubRepositories } from '../tools/github-api';
+import { simpleScraper } from '../tools/simple-scraper';
+
+// Define the tools the AI can use.
+const tools = {
+  getGithubRepositories: ai.defineTool(
+    {
+      name: 'getGithubRepositories',
+      description: 'Fetches repository names and descriptions for a given GitHub username. Does not require an access token for public data.',
+      inputSchema: z.object({ githubUsername: z.string() }),
+      outputSchema: z.array(z.string()),
+    },
+    async ({ githubUsername }) => getGithubRepositories(githubUsername)
+  ),
+  scrapeWebsite: ai.defineTool(
+    {
+        name: 'scrapeWebsite',
+        description: 'Scrapes a website and returns its text content.',
+        inputSchema: z.object({ url: z.string() }),
+        outputSchema: z.string(),
+    },
+    async ({ url }) => simpleScraper(url)
+  )
+};
 
 // Define the AI prompt for the onboarding flow
 const onboardingPrompt = ai.definePrompt({
     name: 'onboardingPrompt',
     input: { schema: OnboardingInputSchema },
     output: { schema: OnboardingOutputSchema },
+    tools: [tools.getGithubRepositories, tools.scrapeWebsite],
     prompt: `You are an expert talent evaluator for a university program. Your task is to analyze a student's online profiles and generate a structured JSON skill profile.
 
-Analyze the following profile information. Use the scrapeWebsite tool to get the content of the URLs.
+You have access to tools that can fetch data from GitHub and other websites. Use them to gather information based on the URLs provided.
 
 - GitHub Profile: {{{githubUrl}}}
 - LinkedIn Profile: {{{linkedinUrl}}}
@@ -40,13 +64,7 @@ export const analyzeAndBuildProfile = ai.defineFlow(
     outputSchema: OnboardingOutputSchema,
   },
   async (input) => {
-    
-    let githubContent = '';
-    if (input.githubUrl) {
-      githubContent = await scrapeWebsite(input.githubUrl);
-    }
-    
-    const { output } = await onboardingPrompt({ ...input, githubUrl: githubContent });
+    const { output } = await onboardingPrompt(input);
     return output!;
   }
 );

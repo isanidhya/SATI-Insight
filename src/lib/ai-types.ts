@@ -19,11 +19,10 @@ export const SkillSchema = z.object({
 
 /**
  * Defines the schema for the input of the `suggestSkills` flow.
- * This now takes the user's GitHub username and access token.
+ * This now takes the user's GitHub username.
  */
 export const SuggestSkillsInputSchema = z.object({
   githubUsername: z.string().describe("The user's GitHub username."),
-  githubAccessToken: z.string().describe("The user's GitHub OAuth access token."),
 });
 
 

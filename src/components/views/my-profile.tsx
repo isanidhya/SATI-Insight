@@ -40,7 +40,7 @@ const profileSchema = z.object({
 });
 
 export function MyProfile() {
-  const { user, profile, loading, githubAccessToken, refreshProfile } = useUser();
+  const { user, profile, loading, refreshProfile } = useUser();
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -84,8 +84,8 @@ export function MyProfile() {
       
       const analyses: Promise<string[]>[] = [];
 
-      if (githubUsername && githubAccessToken) {
-        analyses.push(suggestSkills({ githubUsername, githubAccessToken }).then(r => r.skills));
+      if (githubUsername) {
+        analyses.push(suggestSkills({ githubUsername }).then(r => r.skills));
       }
       
       if (values.linkedinUrl || values.leetcodeUrl) {

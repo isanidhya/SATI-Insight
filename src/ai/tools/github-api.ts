@@ -4,16 +4,14 @@ import { Octokit } from 'octokit';
 /**
  * Fetches a user's public repositories from GitHub.
  * @param username The GitHub username.
- * @param accessToken The user's GitHub OAuth access token.
  * @returns A list of project descriptions.
  */
 export async function getGithubRepositories(
-  username: string,
-  accessToken: string
+  username: string
 ): Promise<string[]> {
   console.log(`Fetching repositories for ${username} using the GitHub API.`);
   try {
-    const octokit = new Octokit({ auth: accessToken });
+    const octokit = new Octokit(); // No auth token needed for public repos
 
     const repos = await octokit.request('GET /users/{username}/repos', {
       username: username,
