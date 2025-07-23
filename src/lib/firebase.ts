@@ -1,7 +1,7 @@
 
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,5 +20,16 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+/**
+ * Updates a user's profile in Firestore.
+ * @param uid The user's ID.
+ * @param data The data to update.
+ */
+export async function updateUserProfile(uid: string, data: Record<string, any>) {
+  const userDocRef = doc(db, 'users', uid);
+  await updateDoc(userDocRef, data);
+}
+
 
 export { app, auth, db };

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DiscoverView } from './views/discover';
-import { MyProfileView } from './views/my-profile';
+import { MyProfile } from './views/my-profile';
 import { MentorView } from './views/mentor';
 import { Logo } from './icons';
 import { Compass, UserCircle, Bot, LogOut, Sun, Moon } from 'lucide-react';
@@ -36,7 +37,7 @@ export function Dashboard() {
   const renderView = () => {
     switch (activeView) {
       case 'my-profile':
-        return <MyProfileView />;
+        return <MyProfile />;
       case 'mentor':
         return <MentorView />;
       case 'discover':

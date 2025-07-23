@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file contains the Genkit flow for the user onboarding process.
@@ -5,6 +6,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { scrapeWebsite } from '../tools/web-scraper';
 
 // Define the input schema for the onboarding flow
 export const OnboardingInputSchema = z.object({
@@ -36,7 +38,7 @@ const onboardingPrompt = ai.definePrompt({
     output: { schema: OnboardingOutputSchema },
     prompt: `You are an expert talent evaluator for a university program. Your task is to analyze a student's online profiles and generate a structured JSON skill profile.
 
-Analyze the following profile information. NOTE: You do not have the ability to click links, so you must infer the skills and experience based on the URLs and any provided context.
+Analyze the following profile information. Use the scrapeWebsite tool to get the content of the URLs.
 
 - GitHub Profile: {{{githubUrl}}}
 - LinkedIn Profile: {{{linkedinUrl}}}
@@ -60,10 +62,13 @@ const onboardingFlow = ai.defineFlow(
     outputSchema: OnboardingOutputSchema,
   },
   async (input) => {
-    // NOTE: In a real-world scenario, you would first use a tool to scrape the content
-    // of the provided URLs. Since we can't do that here, the AI will infer from the URLs.
     
-    const { output } = await onboardingPrompt(input);
+    let githubContent = '';
+    if (input.githubUrl) {
+      githubContent = await scrapeWebsite(input.githubUrl);
+    }
+    
+    const { output } = await onboardingPrompt({ ...input, githubUrl: githubContent });
     return output!;
   }
 );

@@ -1,45 +1,83 @@
+
+import { z } from 'zod';
+
 /**
- * @fileOverview This file contains all the type definitions and Zod schemas for the AI flows.
+ * Defines the schema for a single skill, including its name, rating, and evidence.
+ * This is used for the comprehensive skill profile generation.
  */
-import {z} from 'genkit';
-
-// === AI Mentor Feedback Types ===
-export const MentorFeedbackInputSchema = z.object({
-  weeklyActivity: z
+export const SkillSchema = z.object({
+  name: z.string().describe('The name of the skill.'),
+  rating: z
+    .number()
+    .min(1)
+    .max(5)
+    .describe('The AI-rated proficiency of the skill from 1-5.'),
+  evidence: z
     .string()
-    .describe('Description of the student\'s activities during the week.'),
-  skills: z.array(z.string()).describe('List of skills the student possesses.'),
+    .describe('The specific evidence or project that justifies the rating.'),
 });
-export type MentorFeedbackInput = z.infer<typeof MentorFeedbackInputSchema>;
 
-export const MentorFeedbackOutputSchema = z.object({
-  feedback: z.string().describe('Personalized feedback and improvement tips for the student.'),
-});
-export type MentorFeedbackOutput = z.infer<typeof MentorFeedbackOutputSchema>;
-
-
-// === Suggest Skills Types ===
+/**
+ * Defines the schema for the input of the `suggestSkills` flow.
+ * This now takes the user's GitHub username and access token.
+ */
 export const SuggestSkillsInputSchema = z.object({
-  projectDescriptions: z.array(z.string()).describe('A list of project descriptions.'),
-  publicData: z.string().describe('Any public data available about the student.'),
+  githubUsername: z.string().describe("The user's GitHub username."),
+  githubAccessToken: z.string().describe("The user's GitHub OAuth access token."),
 });
-export type SuggestSkillsInput = z.infer<typeof SuggestSkillsInputSchema>;
 
+
+/**
+ * Defines the schema for the output of the `suggestSkills` flow.
+ * It returns a list of suggested skill names.
+ */
 export const SuggestSkillsOutputSchema = z.object({
-  suggestedSkills: z.array(z.string()).describe('A list of suggested skills based on the project descriptions and public data.'),
+  skills: z.array(z.string()).describe('A list of suggested skills.'),
 });
-export type SuggestSkillsOutput = z.infer<typeof SuggestSkillsOutputSchema>;
 
-
-// === Validate Skills Types ===
+/**
+ * Defines the schema for the input of the `validateSkills` flow.
+ * This includes the list of skills to validate and the context from the GitHub profile.
+ */
 export const ValidateSkillsInputSchema = z.object({
-  skill: z.string().describe('The skill to validate.'),
-  proof: z.string().describe('Link to verified project or public data as proof of skill.'),
+  skills: z.array(z.string()).describe('The list of skills to be validated.'),
+  proof: z
+    .string()
+    .describe('The context (like URLs to profiles) to use for validation.'),
 });
-export type ValidateSkillsInput = z.infer<typeof ValidateSkillsInputSchema>;
 
+/**
+ * Defines the schema for the output of the `validateSkills` flow.
+ * It returns a validated list of skills with ratings and evidence.
+ */
 export const ValidateSkillsOutputSchema = z.object({
-  skillRating: z.number().min(1).max(5).describe('A rating from 1 to 5 stars representing the validated skill level.'),
-  feedback: z.string().describe('Personalized feedback and improvement tips.'),
+  validatedSkills: z
+    .array(SkillSchema)
+    .describe('The list of validated and rated skills.'),
 });
+
+
+/**
+ * Defines the schema for the input of the `getMentorFeedback` flow.
+ */
+export const MentorFeedbackInputSchema = z.object({
+    weeklyActivity: z.string().describe("The student's description of their weekly activities."),
+    skills: z.array(z.string()).describe("The list of the student's current skills."),
+});
+
+
+/**
+ * Defines the schema for the output of the `getMentorFeedback` flow.
+ */
+export const MentorFeedbackOutputSchema = z.object({
+    feedback: z.string().describe("The AI mentor's personalized feedback and advice."),
+});
+
+// Exporting the TypeScript types for use in the application code.
+export type Skill = z.infer<typeof SkillSchema>;
+export type SuggestSkillsInput = z.infer<typeof SuggestSkillsInputSchema>;
+export type SuggestSkillsOutput = z.infer<typeof SuggestSkillsOutputSchema>;
+export type ValidateSkillsInput = z.infer<typeof ValidateSkillsInputSchema>;
 export type ValidateSkillsOutput = z.infer<typeof ValidateSkillsOutputSchema>;
+export type MentorFeedbackInput = z.infer<typeof MentorFeedbackInputSchema>;
+export type MentorFeedbackOutput = z.infer<typeof MentorFeedbackOutputSchema>;

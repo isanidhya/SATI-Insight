@@ -1,139 +1,260 @@
-'use client';
-import { useState } from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Wand2 } from 'lucide-react';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { suggestSkills } from '@/ai/flows/suggest-skills';
-import type { Skill } from '@/lib/types';
-import { StarRating } from '../star-rating';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/use-auth';
 
-const githubProfileSchema = z.object({
-  githubUrl: z.string().url({ message: "Please enter a valid GitHub profile URL." }),
+'use client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { useUser } from '@/hooks/use-user';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import { suggestSkills } from '@/ai/flows/suggest-skills';
+import { analyzeSocialProfiles } from '@/ai/flows/social-profile-analyzer';
+import { validateSkills } from '@/ai/flows/validate-skills';
+import { useToast } from '@/hooks/use-toast';
+import { updateUserProfile } from '@/lib/firebase';
+import { Github, Linkedin, Code, Loader2, Star } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { StarRating } from '../star-rating';
+
+const profileSchema = z.object({
+  githubUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
+  linkedinUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
+  leetcodeUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
 });
 
-export function MyProfileView() {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  
-  const [suggestedSkills, setSuggestedSkills] = useState<Skill[]>([]);
+export function MyProfile() {
+  const { user, profile, loading, githubAccessToken, refreshProfile } = useUser();
+  const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof githubProfileSchema>>({
-    resolver: zodResolver(githubProfileSchema),
+  const form = useForm<z.infer<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
     defaultValues: {
-      githubUrl: "",
+      githubUrl: '',
+      linkedinUrl: '',
+      leetcodeUrl: '',
     },
   });
 
-  async function onAnalyzeProfile(values: z.infer<typeof githubProfileSchema>) {
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        githubUrl: profile.githubUrl || '',
+        linkedinUrl: profile.linkedinUrl || '',
+        leetcodeUrl: profile.leetcodeUrl || '',
+      });
+    }
+  }, [profile, form]);
+
+  const getUsernameFromUrl = (url: string) => {
+    if (!url) return null;
+    try {
+      const path = new URL(url).pathname;
+      return path.split('/')[1];
+    } catch {
+      return null;
+    }
+  };
+
+  async function onAnalyzeProfiles() {
     setIsSuggesting(true);
     setSuggestedSkills([]);
     try {
-      // NOTE: This is a placeholder for the actual implementation.
-      // We will need to implement a flow that takes a GitHub URL,
-      // fetches the repositories, and then suggests and validates skills.
-      // For now, we will simulate the result.
-      const result = await suggestSkills({
-        projectDescriptions: [
-            "A full-stack web application using React and Node.js.",
-            "A mobile app built with React Native and TypeScript.",
-            "A Python script for data analysis with Pandas and NumPy."
-        ],
-        publicData: `The user's GitHub profile is ${values.githubUrl}`,
-      });
-
-      // Simulate skill validation based on suggestions
-      const validatedSkills = result.suggestedSkills.map(skill => ({
-        name: skill,
-        rating: Math.floor(Math.random() * 5) + 1, // Random rating for now
-        verified: true,
-        proof: values.githubUrl
-      }));
+      const values = form.getValues();
+      const githubUsername = getUsernameFromUrl(values.githubUrl || '');
       
-      setSuggestedSkills(validatedSkills);
+      const analyses: Promise<string[]>[] = [];
 
-      toast({
-        title: "Profile Analysis Complete!",
-        description: "We've suggested some skills based on your GitHub profile.",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Analysis Failed",
-        description: "Could not analyze GitHub profile. Please try again.",
-      });
+      if (githubUsername && githubAccessToken) {
+        analyses.push(suggestSkills({ githubUsername, githubAccessToken }).then(r => r.skills));
+      }
+      
+      if (values.linkedinUrl || values.leetcodeUrl) {
+         analyses.push(analyzeSocialProfiles({ 
+          linkedinUrl: values.linkedinUrl, 
+          leetcodeUrl: values.leetcodeUrl 
+        }).then(r => r.skills));
+      }
+
+      if(analyses.length === 0) {
+        toast({ variant: "destructive", title: 'No profiles to analyze', description: 'Please provide at least one profile URL.' });
+        setIsSuggesting(false);
+        return;
+      }
+
+      const results = await Promise.all(analyses);
+      const combinedSkills = [...new Set(results.flat())];
+      
+      setSuggestedSkills(combinedSkills);
+      toast({ title: 'Analysis complete!', description: `Found ${combinedSkills.length} potential skills.` });
+
+    } catch (error: any) {
+      toast({ variant: "destructive", title: 'Analysis Failed', description: error.message });
     } finally {
       setIsSuggesting(false);
     }
   }
-  
+
+  async function onValidateAndSaveSkills() {
+    if (suggestedSkills.length === 0 || !user) return;
+
+    setIsSaving(true);
+    try {
+      const values = form.getValues();
+      const proof = `GitHub: ${values.githubUrl || 'N/A'}, LinkedIn: ${values.linkedinUrl || 'N/A'}, LeetCode: ${values.leetcodeUrl || 'N/A'}`;
+      
+      const { validatedSkills } = await validateSkills({ skills: suggestedSkills, proof });
+      
+      await updateUserProfile(user.uid, {
+        skills: validatedSkills,
+        githubUrl: values.githubUrl,
+        linkedinUrl: values.linkedinUrl,
+        leetcodeUrl: values.leetcodeUrl,
+      });
+      
+      toast({ title: 'Profile Updated!', description: 'Your new skills have been added to your profile.' });
+      setSuggestedSkills([]);
+      refreshProfile();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: 'Validation Failed', description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-5xl mx-auto">
+      <div>
+        <h1 className="text-3xl font-bold">My Profile</h1>
+        <p className="text-muted-foreground">Manage your skills and professional links.</p>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles /> AI-Powered Skill Analysis
-          </CardTitle>
-          <CardDescription>
-            Enter your GitHub profile URL to automatically discover and rate your skills. 
-            The AI will analyze your public repositories to build your skill profile.
-          </CardDescription>
+          <CardTitle>My Verified Skills</CardTitle>
+          <CardDescription>This is your current skill portfolio. Re-analyze your profiles to update it.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onAnalyzeProfile)} className="flex items-end gap-4">
+          {profile?.skills && profile.skills.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {profile.skills.map((skill, index) => (
+                <div key={index} className="p-3 rounded-lg border bg-muted/20">
+                  <div className="flex justify-between items-center">
+                    <p className="font-semibold">{skill.name}</p>
+                    <StarRating rating={skill.rating} />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">
+                    <span className="font-medium">Evidence:</span> {skill.evidence}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No skills analyzed yet.</p>
+              <p className="text-sm text-muted-foreground">Add your profile links below and click "Analyze Profiles" to get started.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Form {...form}>
+        <form onSubmit={(e) => { e.preventDefault(); onAnalyzeProfiles(); }} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analyze Professional Profiles</CardTitle>
+              <CardDescription>
+                Provide links to your professional profiles. Our AI will analyze them to identify your skills.
+                You'll have a chance to review them before adding them to your profile.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="githubUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2"><Github />GitHub Profile URL</FormLabel>
+                      <FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               <FormField
                 control={form.control}
-                name="githubUrl"
+                name="linkedinUrl"
                 render={({ field }) => (
-                  <FormItem className="flex-grow">
-                    <FormLabel>GitHub Profile URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://github.com/your-username" {...field} />
-                    </FormControl>
-                    <FormMessage />
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Linkedin />LinkedIn Profile URL</FormLabel>
+                    <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
+                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSuggesting} className="h-10">
+              <FormField
+                control={form.control}
+                name="leetcodeUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Code />LeetCode Profile URL</FormLabel>
+                    <FormControl><Input placeholder="https://leetcode.com/username" {...field} /></FormControl>
+                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" disabled={isSuggesting || isSaving}>
                 {isSuggesting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Analyze My Profile
+                {isSuggesting ? 'Analyzing...' : 'Analyze Profiles'}
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-      
+            </CardFooter>
+          </Card>
+        </form>
+      </Form>
+
       {suggestedSkills.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Suggested Skills</CardTitle>
-            <CardDescription>Review the skills suggested by the AI. You can choose which ones to add to your profile.</CardDescription>
+            <CardTitle>Review Suggested Skills</CardTitle>
+            <CardDescription>
+              We found the following skills. Review them and then click the button below to validate them and add them to your profile.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-              {suggestedSkills.map((skill, index) => (
-                <div key={index} className="flex items-center justify-between p-2 rounded-md transition-colors hover:bg-muted/50">
-                  <div>
-                    <p className="font-medium">{skill.name}</p>
-                    <Badge variant={skill.verified ? "default" : "secondary"}>
-                      {skill.verified ? "Verified" : "Unverified"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <StarRating rating={skill.rating} />
-                    <Button variant="outline" size="sm">Add to Profile</Button>
-                  </div>
-                </div>
-              ))}
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {suggestedSkills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
+            </div>
           </CardContent>
+          <CardFooter className="flex justify-between items-center">
+            <Button onClick={onValidateAndSaveSkills} disabled={isSaving || isSuggesting}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving ? 'Saving...' : 'Validate & Add to Profile'}
+            </Button>
+            <Button variant="ghost" onClick={() => setSuggestedSkills([])} disabled={isSaving}>Clear Suggestions</Button>
+          </CardFooter>
         </Card>
       )}
     </div>
