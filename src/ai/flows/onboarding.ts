@@ -9,6 +9,7 @@ import { z } from 'genkit';
 import { OnboardingInputSchema, OnboardingOutputSchema } from '@/lib/ai-types';
 import { getGithubRepositories } from '../tools/github-api';
 import { simpleScraper } from '../tools/simple-scraper';
+import { googleAI } from '@genkit-ai/googleai';
 
 // Define the tools the AI can use.
 const getGithubRepositoriesTool = ai.defineTool(
@@ -37,6 +38,7 @@ const onboardingPrompt = ai.definePrompt({
     input: { schema: OnboardingInputSchema },
     output: { schema: OnboardingOutputSchema },
     tools: [getGithubRepositoriesTool, scrapeWebsiteTool],
+    model: googleAI.model('gemini-1.5-flash-latest'),
     prompt: `You are an expert talent evaluator for a university program. Your task is to analyze a student's online profiles and generate a structured JSON skill profile.
 
 You have access to tools that can fetch data from GitHub and other websites. Use them to gather information based on the URLs provided.
