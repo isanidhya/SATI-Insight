@@ -173,7 +173,22 @@ export function MyProfile() {
                         <FormField control={form.control} name="branch" render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="flex items-center gap-2"><School/> Branch</FormLabel>
-                                <FormControl><Input placeholder="e.g., Computer Science" {...field} /></FormControl>
+                                 <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="CSE">CSE</SelectItem>
+                                      <SelectItem value="IT">IT</SelectItem>
+                                      <SelectItem value="AIADS">AI & Data Science</SelectItem>
+                                      <SelectItem value="AIML">AI & Machine Learning</SelectItem>
+                                      <SelectItem value="Cyber Security">Cyber Security</SelectItem>
+                                      <SelectItem value="IOT">Internet of Things (IoT)</SelectItem>
+                                      <SelectItem value="EC">Electronics & Communication</SelectItem>
+                                      <SelectItem value="EE">Electrical Engineering</SelectItem>
+                                      <SelectItem value="Mechanical">Mechanical Engineering</SelectItem>
+                                      <SelectItem value="Civil">Civil Engineering</SelectItem>
+                                      <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )} />
