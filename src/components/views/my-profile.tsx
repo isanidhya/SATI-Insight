@@ -82,6 +82,7 @@ export function MyProfile() {
     try {
         await updateUserProfile(user.uid, {
             name: values.name,
+            email: values.email,
             branch: values.branch,
             year: values.year
         });
@@ -163,7 +164,7 @@ export function MyProfile() {
                         <FormField control={form.control} name="email" render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="flex items-center gap-2"><Mail/> College Email</FormLabel>
-                                <FormControl><Input disabled {...field} /></FormControl>
+                                <FormControl><Input {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -179,7 +180,7 @@ export function MyProfile() {
                         <FormField control={form.control} name="year" render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="flex items-center gap-2"><Calendar/> Academic Year</FormLabel>
-                                <Select onValueChange={field.onChange} value={String(field.value)}>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} value={String(field.value)}>
                                     <FormControl><SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger></FormControl>
                                     <SelectContent>
                                     {[1, 2, 3, 4, 5].map(y => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
