@@ -18,7 +18,7 @@ import { DiscoverView } from './views/discover';
 import { MyProfile } from './views/my-profile';
 import { MentorView } from './views/mentor';
 import { Logo } from './icons';
-import { Compass, UserCircle, Bot, LogOut, Sun, Moon } from 'lucide-react';
+import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -98,8 +98,14 @@ export function Dashboard() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>{user?.displayName}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveView('my-profile')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = 'mailto:support@satiinsight.com'}>
+                   <LifeBuoy className="mr-2 h-4 w-4" />
+                  <span>Support</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
