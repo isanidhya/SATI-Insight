@@ -18,6 +18,7 @@ export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentP
   const skills = student.skills || [];
   const profileSummary = student.profileSummary || 'No AI summary available for this profile yet.';
   const overallRating = student.overallRating || 0;
+  const studentName = student.name || 'Unnamed Student';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -25,10 +26,10 @@ export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentP
         {/* Header Section */}
         <DialogHeader className="flex flex-row items-start gap-6 space-y-0 mb-4">
           <Avatar className="h-24 w-24 border">
-            <AvatarFallback className="text-3xl">{student.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback className="text-3xl">{studentName.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="space-y-1.5 flex-grow">
-            <DialogTitle className="text-3xl font-bold">{student.name}</DialogTitle>
+            <DialogTitle className="text-3xl font-bold">{studentName}</DialogTitle>
             <DialogDescription className="text-md text-muted-foreground">
               {student.branch || 'N/A'} | Year {student.year || 'N/A'}
             </DialogDescription>

@@ -21,15 +21,15 @@ export function StudentCard({ student, onViewProfile }: StudentCardProps) {
       onClick={() => onViewProfile(student)}
       onKeyDown={(e) => e.key === 'Enter' && onViewProfile(student)}
       tabIndex={0}
-      aria-label={`View profile for ${student.name}`}
+      aria-label={`View profile for ${student.name || 'Unknown Student'}`}
     >
       <CardHeader className="flex flex-row items-center gap-4 pb-4">
         <Avatar className="h-16 w-16 border">
           {/* Avatar image is not part of the current user model */}
-          <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{student.name ? student.name.charAt(0) : '-'}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <CardTitle className="text-xl">{student.name}</CardTitle>
+          <CardTitle className="text-xl">{student.name || 'Unnamed Student'}</CardTitle>
           <p className="text-sm text-muted-foreground">{student.branch} | Year {student.year}</p>
         </div>
         {student.overallRating && (
