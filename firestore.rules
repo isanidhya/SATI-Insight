@@ -1,20 +1,18 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // USERS collection:
+    // - Any authenticated user can read all user profiles (for the discover page)
+    // - A user can only write to their own profile
     match /users/{userId} {
-      // Allow any authenticated user to read user profiles for the discover page
       allow read: if request.auth != null;
-      
-      // Allow users to create their own profile during signup
-      allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow users to update their own profile
-      allow update: if request.auth != null && request.auth.uid == userId;
-      
-      // Disallow deleting profiles for data integrity
-      allow delete: if false;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // This rule allows collection queries, which is needed for the discover page
+    match /users/{document=**} {
+      allow list: if request.auth != null;
     }
   }
 }
