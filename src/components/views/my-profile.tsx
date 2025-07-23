@@ -69,7 +69,8 @@ export function MyProfile() {
     if (!url) return null;
     try {
       const path = new URL(url).pathname;
-      return path.split('/')[1];
+      const username = path.split('/')[1];
+      return username || null;
     } catch {
       return null;
     }

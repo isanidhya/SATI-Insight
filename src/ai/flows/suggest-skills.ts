@@ -46,12 +46,11 @@ const suggestSkillsFlow = ai.defineFlow(
     inputSchema: SuggestSkillsInputSchema,
     outputSchema: SuggestSkillsOutputSchema,
   },
-  async ({ githubUsername, githubAccessToken }) => {
+  async ({ githubUsername }) => {
     try {
       console.log(`Starting suggestSkillsFlow for ${githubUsername}`);
       const projectDescriptions = await getGithubRepositories(
-        githubUsername,
-        githubAccessToken
+        githubUsername
       );
 
       if (projectDescriptions.length === 0) {

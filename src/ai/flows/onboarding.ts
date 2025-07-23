@@ -11,8 +11,7 @@ import { getGithubRepositories } from '../tools/github-api';
 import { simpleScraper } from '../tools/simple-scraper';
 
 // Define the tools the AI can use.
-const tools = {
-  getGithubRepositories: ai.defineTool(
+const getGithubRepositoriesTool = ai.defineTool(
     {
       name: 'getGithubRepositories',
       description: 'Fetches repository names and descriptions for a given GitHub username. Does not require an access token for public data.',
@@ -20,8 +19,9 @@ const tools = {
       outputSchema: z.array(z.string()),
     },
     async ({ githubUsername }) => getGithubRepositories(githubUsername)
-  ),
-  scrapeWebsite: ai.defineTool(
+  );
+
+const scrapeWebsiteTool = ai.defineTool(
     {
         name: 'scrapeWebsite',
         description: 'Scrapes a website and returns its text content.',
@@ -29,15 +29,14 @@ const tools = {
         outputSchema: z.string(),
     },
     async ({ url }) => simpleScraper(url)
-  )
-};
+  );
 
 // Define the AI prompt for the onboarding flow
 const onboardingPrompt = ai.definePrompt({
     name: 'onboardingPrompt',
     input: { schema: OnboardingInputSchema },
     output: { schema: OnboardingOutputSchema },
-    tools: [tools.getGithubRepositories, tools.scrapeWebsite],
+    tools: [getGithubRepositoriesTool, scrapeWebsiteTool],
     prompt: `You are an expert talent evaluator for a university program. Your task is to analyze a student's online profiles and generate a structured JSON skill profile.
 
 You have access to tools that can fetch data from GitHub and other websites. Use them to gather information based on the URLs provided.
