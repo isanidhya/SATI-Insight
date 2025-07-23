@@ -22,15 +22,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
-import { suggestSkills } from '@/ai/flows/suggest-skills';
-import { analyzeSocialProfiles } from '@/ai/flows/social-profile-analyzer';
-import { validateSkills } from '@/ai/flows/validate-skills';
+import { analyzeAndBuildProfile } from '@/ai/actions/onboarding';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfile } from '@/lib/firebase';
-import { Github, Linkedin, Code, Loader2, Star } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Github, Linkedin, Code, Loader2 } from 'lucide-react';
 import { StarRating } from '../star-rating';
 
 const profileSchema = z.object({
@@ -41,9 +37,7 @@ const profileSchema = z.object({
 
 export function MyProfile() {
   const { user, profile, loading, refreshProfile } = useUser();
-  const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
-  const [isSuggesting, setIsSuggesting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -65,80 +59,37 @@ export function MyProfile() {
     }
   }, [profile, form]);
 
-  const getUsernameFromUrl = (url: string) => {
-    if (!url) return null;
-    try {
-      const path = new URL(url).pathname;
-      const username = path.split('/')[1];
-      return username || null;
-    } catch {
-      return null;
-    }
-  };
-
-  async function onAnalyzeProfiles() {
-    setIsSuggesting(true);
-    setSuggestedSkills([]);
-    try {
-      const values = form.getValues();
-      const githubUsername = getUsernameFromUrl(values.githubUrl || '');
-      
-      const analyses: Promise<string[]>[] = [];
-
-      if (githubUsername) {
-        analyses.push(suggestSkills({ githubUsername }).then(r => r.skills));
-      }
-      
-      if (values.linkedinUrl || values.leetcodeUrl) {
-         analyses.push(analyzeSocialProfiles({ 
-          linkedinUrl: values.linkedinUrl, 
-          leetcodeUrl: values.leetcodeUrl 
-        }).then(r => r.skills));
-      }
-
-      if(analyses.length === 0) {
-        toast({ variant: "destructive", title: 'No profiles to analyze', description: 'Please provide at least one profile URL.' });
-        setIsSuggesting(false);
+  async function onSubmit(values: z.infer<typeof profileSchema>) {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to update your profile.' });
         return;
+    }
+    
+    setIsAnalyzing(true);
+    try {
+      if (!values.githubUrl && !values.linkedinUrl && !values.leetcodeUrl) {
+          toast({ variant: 'destructive', title: 'No profiles to analyze', description: 'Please provide at least one profile URL.' });
+          return;
       }
 
-      const results = await Promise.all(analyses);
-      const combinedSkills = [...new Set(results.flat())];
-      
-      setSuggestedSkills(combinedSkills);
-      toast({ title: 'Analysis complete!', description: `Found ${combinedSkills.length} potential skills.` });
-
-    } catch (error: any) {
-      toast({ variant: "destructive", title: 'Analysis Failed', description: error.message });
-    } finally {
-      setIsSuggesting(false);
-    }
-  }
-
-  async function onValidateAndSaveSkills() {
-    if (suggestedSkills.length === 0 || !user) return;
-
-    setIsSaving(true);
-    try {
-      const values = form.getValues();
-      const proof = `GitHub: ${values.githubUrl || 'N/A'}, LinkedIn: ${values.linkedinUrl || 'N/A'}, LeetCode: ${values.leetcodeUrl || 'N/A'}`;
-      
-      const { validatedSkills } = await validateSkills({ skills: suggestedSkills, proof });
-      
-      await updateUserProfile(user.uid, {
-        skills: validatedSkills,
+      const aiProfileData = await analyzeAndBuildProfile({
         githubUrl: values.githubUrl,
         linkedinUrl: values.linkedinUrl,
         leetcodeUrl: values.leetcodeUrl,
       });
-      
-      toast({ title: 'Profile Updated!', description: 'Your new skills have been added to your profile.' });
-      setSuggestedSkills([]);
+
+      await updateUserProfile(user.uid, {
+        ...values,
+        ...aiProfileData,
+      });
+
+      toast({ title: 'Profile Updated!', description: 'Your profile has been successfully analyzed and updated.' });
       refreshProfile();
+
     } catch (error: any) {
-      toast({ variant: "destructive", title: 'Validation Failed', description: error.message });
+      toast({ variant: "destructive", title: 'Analysis Failed', description: error.message });
     } finally {
-      setIsSaving(false);
+      setIsAnalyzing(false);
     }
   }
 
@@ -156,7 +107,7 @@ export function MyProfile() {
       <Card>
         <CardHeader>
           <CardTitle>My Verified Skills</CardTitle>
-          <CardDescription>This is your current skill portfolio. Re-analyze your profiles to update it.</CardDescription>
+          <CardDescription>This is your current AI-generated skill portfolio. Re-analyze your profiles to update it.</CardDescription>
         </CardHeader>
         <CardContent>
           {profile?.skills && profile.skills.length > 0 ? (
@@ -176,20 +127,25 @@ export function MyProfile() {
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground">No skills analyzed yet.</p>
-              <p className="text-sm text-muted-foreground">Add your profile links below and click "Analyze Profiles" to get started.</p>
+              <p className="text-sm text-muted-foreground">Add your profile links below and click "Analyze & Update Profile" to get started.</p>
             </div>
           )}
         </CardContent>
+         {profile?.profileSummary && (
+             <CardFooter className="flex-col items-start gap-2 border-t pt-6">
+                <h4 className="font-semibold">AI Profile Summary</h4>
+                <p className="text-sm text-muted-foreground">{profile.profileSummary}</p>
+             </CardFooter>
+         )}
       </Card>
 
       <Form {...form}>
-        <form onSubmit={(e) => { e.preventDefault(); onAnalyzeProfiles(); }} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Analyze Professional Profiles</CardTitle>
               <CardDescription>
-                Provide links to your professional profiles. Our AI will analyze them to identify your skills.
-                You'll have a chance to review them before adding them to your profile.
+                Provide links to your professional profiles. Our AI will analyze them to identify and rate your skills.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -228,37 +184,14 @@ export function MyProfile() {
               />
             </CardContent>
             <CardFooter>
-              <Button type="submit" disabled={isSuggesting || isSaving}>
-                {isSuggesting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isSuggesting ? 'Analyzing...' : 'Analyze Profiles'}
+              <Button type="submit" disabled={isAnalyzing}>
+                {isAnalyzing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isAnalyzing ? 'Analyzing...' : 'Analyze & Update Profile'}
               </Button>
             </CardFooter>
           </Card>
         </form>
       </Form>
-
-      {suggestedSkills.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Review Suggested Skills</CardTitle>
-            <CardDescription>
-              We found the following skills. Review them and then click the button below to validate them and add them to your profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {suggestedSkills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between items-center">
-            <Button onClick={onValidateAndSaveSkills} disabled={isSaving || isSuggesting}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSaving ? 'Saving...' : 'Validate & Add to Profile'}
-            </Button>
-            <Button variant="ghost" onClick={() => setSuggestedSkills([])} disabled={isSaving}>Clear Suggestions</Button>
-          </CardFooter>
-        </Card>
-      )}
     </div>
   );
 }
