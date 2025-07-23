@@ -17,12 +17,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { DiscoverView } from './views/discover';
 import { MyProfile } from './views/my-profile';
 import { MentorView } from './views/mentor';
+import { SupportView } from './views/support';
 import { Logo } from './icons';
 import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 
-type View = 'discover' | 'my-profile' | 'mentor';
+type View = 'discover' | 'my-profile' | 'mentor' | 'support';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
@@ -32,6 +33,7 @@ export function Dashboard() {
     discover: 'Discover Talent',
     'my-profile': 'My Profile',
     mentor: 'AI Mentor',
+    support: 'Support',
   };
 
   const renderView = () => {
@@ -40,6 +42,8 @@ export function Dashboard() {
         return <MyProfile />;
       case 'mentor':
         return <MentorView />;
+      case 'support':
+        return <SupportView />;
       case 'discover':
       default:
         return <DiscoverView />;
@@ -77,6 +81,12 @@ export function Dashboard() {
                 <span>AI Mentor</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveView('support')} isActive={activeView === 'support'} tooltip="Support">
+                <LifeBuoy />
+                <span>Support</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -102,7 +112,7 @@ export function Dashboard() {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = 'mailto:support@satiinsight.com'}>
+                <DropdownMenuItem onClick={() => setActiveView('support')}>
                    <LifeBuoy className="mr-2 h-4 w-4" />
                   <span>Support</span>
                 </DropdownMenuItem>
