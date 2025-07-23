@@ -79,19 +79,26 @@ export default function SignupPage() {
       });
 
       // 4. Trigger the AI analysis flow
-      const aiProfileData = await analyzeAndBuildProfile({
-        githubUrl: values.githubUrl,
-        linkedinUrl: values.linkedinUrl,
-        leetcodeUrl: values.leetcodeUrl,
-      });
-      
-      // 5. Update the user document with the AI-generated data
-      await setDoc(userDocRef, { ...aiProfileData }, { merge: true });
+      if (values.githubUrl || values.linkedinUrl || values.leetcodeUrl) {
+        const aiProfileData = await analyzeAndBuildProfile({
+            githubUrl: values.githubUrl,
+            linkedinUrl: values.linkedinUrl,
+            leetcodeUrl: values.leetcodeUrl,
+        });
+        
+        // 5. Update the user document with the AI-generated data
+        await setDoc(userDocRef, { ...aiProfileData }, { merge: true });
 
-      toast({
-        title: 'Account Created!',
-        description: "We've analyzed your profiles to build your skill portfolio. This may take a moment.",
-      });
+        toast({
+            title: 'Account Created!',
+            description: "We've analyzed your profiles to build your skill portfolio.",
+        });
+      } else {
+         toast({
+            title: 'Account Created!',
+            description: "Welcome to SATIInsight! Add your profiles later to build your skill portfolio.",
+        });
+      }
       
       router.push('/');
 

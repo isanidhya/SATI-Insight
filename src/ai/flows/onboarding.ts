@@ -7,29 +7,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { scrapeWebsite } from '../tools/web-scraper';
-
-// Define the input schema for the onboarding flow
-export const OnboardingInputSchema = z.object({
-  githubUrl: z.string().url().optional().describe('URL to the user's GitHub profile.'),
-  linkedinUrl: z.string().url().optional().describe('URL to the user's LinkedIn profile.'),
-  leetcodeUrl: z.string().url().optional().describe('URL to the user's LeetCode profile.'),
-});
-export type OnboardingInput = z.infer<typeof OnboardingInputSchema>;
-
-// Define the output schema for a single skill, including rating and evidence
-const SkillProfileSchema = z.object({
-    name: z.string().describe("The name of the skill."),
-    rating: z.number().min(1).max(5).describe("The AI-rated proficiency of the skill from 1-5."),
-    evidence: z.string().describe("The specific evidence or project that justifies the rating."),
-});
-
-// Define the overall output schema for the entire profile analysis
-export const OnboardingOutputSchema = z.object({
-  skills: z.array(SkillProfileSchema).describe("A list of skills identified and rated from the user's profiles."),
-  profileSummary: z.string().describe("A concise summary of the user's professional profile based on the provided links."),
-  overallRating: z.number().min(1).max(5).describe("An overall rating of the user's entire profile, considering all skills and experiences."),
-});
-export type OnboardingOutput = z.infer<typeof OnboardingOutputSchema>;
+import { OnboardingInputSchema, OnboardingOutputSchema, type OnboardingInput, type OnboardingOutput } from '@/lib/ai-types';
 
 // Define the AI prompt for the onboarding flow
 const onboardingPrompt = ai.definePrompt({
@@ -55,7 +33,7 @@ Your final output must be a single, valid JSON object that strictly follows the 
 });
 
 // Define the main flow function
-const onboardingFlow = ai.defineFlow(
+export const analyzeAndBuildProfileFlow = ai.defineFlow(
   {
     name: 'onboardingFlow',
     inputSchema: OnboardingInputSchema,
@@ -72,9 +50,3 @@ const onboardingFlow = ai.defineFlow(
     return output!;
   }
 );
-
-// This is the main function that will be called from the signup page.
-export async function analyzeAndBuildProfile(input: OnboardingInput): Promise<OnboardingOutput> {
-  console.log("AI Onboarding Flow Triggered with input:", input);
-  return await onboardingFlow(input);
-}

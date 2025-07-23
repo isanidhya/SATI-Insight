@@ -3,14 +3,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { simpleScraper } from '../tools/simple-scraper';
-import { SuggestSkillsOutputSchema } from '@/lib/ai-types';
-
-export const SocialProfileInputSchema = z.object({
-  linkedinUrl: z.string().url().optional(),
-  leetcodeUrl: z.string().url().optional(),
-});
-
-export type SocialProfileInput = z.infer<typeof SocialProfileInputSchema>;
+import { SocialProfileInputSchema, SuggestSkillsOutputSchema, type SocialProfileInput } from '@/lib/ai-types';
 
 const prompt = ai.definePrompt({
   name: 'socialProfilePrompt',

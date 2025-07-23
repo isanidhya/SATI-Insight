@@ -73,6 +73,31 @@ export const MentorFeedbackOutputSchema = z.object({
     feedback: z.string().describe("The AI mentor's personalized feedback and advice."),
 });
 
+// Define the input schema for the onboarding flow
+export const OnboardingInputSchema = z.object({
+  githubUrl: z.string().url().optional().describe('URL to the user\'s GitHub profile.'),
+  linkedinUrl: z.string().url().optional().describe('URL to the user\'s LinkedIn profile.'),
+  leetcodeUrl: z.string().url().optional().describe('URL to the user\'s LeetCode profile.'),
+});
+export type OnboardingInput = z.infer<typeof OnboardingInputSchema>;
+
+// Define the overall output schema for the entire profile analysis
+export const OnboardingOutputSchema = z.object({
+  skills: z.array(SkillSchema).describe("A list of skills identified and rated from the user's profiles."),
+  profileSummary: z.string().describe("A concise summary of the user's professional profile based on the provided links."),
+  overallRating: z.number().min(1).max(5).describe("An overall rating of the user's entire profile, considering all skills and experiences."),
+});
+export type OnboardingOutput = z.infer<typeof OnboardingOutputSchema>;
+
+
+export const SocialProfileInputSchema = z.object({
+  linkedinUrl: z.string().url().optional(),
+  leetcodeUrl: z.string().url().optional(),
+});
+
+export type SocialProfileInput = z.infer<typeof SocialProfileInputSchema>;
+
+
 // Exporting the TypeScript types for use in the application code.
 export type Skill = z.infer<typeof SkillSchema>;
 export type SuggestSkillsInput = z.infer<typeof SuggestSkillsInputSchema>;
