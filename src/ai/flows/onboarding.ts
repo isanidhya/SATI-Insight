@@ -33,7 +33,7 @@ Your final output must be a single, valid JSON object that strictly follows the 
 });
 
 // Define the main flow function
-export const analyzeAndBuildProfileFlow = ai.defineFlow(
+export const analyzeAndBuildProfile = ai.defineFlow(
   {
     name: 'onboardingFlow',
     inputSchema: OnboardingInputSchema,
