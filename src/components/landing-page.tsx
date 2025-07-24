@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/icons';
 import { Bot, Search, Star, Presentation, Users } from 'lucide-react';
+import Image from 'next/image';
 
 const features = [
   {
