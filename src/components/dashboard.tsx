@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -19,12 +18,13 @@ import { MyProfile } from './views/my-profile';
 import { MentorView } from './views/mentor';
 import { SupportView } from './views/support';
 import { FeedbackView } from './views/feedback';
+import { ImprovementsView } from './views/improvements';
 import { Logo } from './icons';
-import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote } from 'lucide-react';
+import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote, TrendingUp } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 
-type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'support';
+type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'improvements' | 'support';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
@@ -35,6 +35,7 @@ export function Dashboard() {
     'my-profile': 'My Profile',
     mentor: 'AI Mentor',
     feedback: 'Personalized Feedback',
+    improvements: 'Improvement Roadmap',
     support: 'Support',
   };
 
@@ -46,6 +47,8 @@ export function Dashboard() {
         return <MentorView />;
       case 'feedback':
         return <FeedbackView />;
+      case 'improvements':
+        return <ImprovementsView />;
       case 'support':
         return <SupportView />;
       case 'discover':
@@ -90,6 +93,12 @@ export function Dashboard() {
                 <MessageSquareQuote />
                 <span>Feedback</span>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => setActiveView('improvements')} isActive={activeView === 'improvements'} tooltip="Improvements">
+                    <TrendingUp />
+                    <span>Improvements</span>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={() => setActiveView('support')} isActive={activeView === 'support'} tooltip="Support">

@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import type { User as UserProfile } from '@/lib/types';
 
@@ -125,6 +124,27 @@ export const ConversationalMentorInputSchema = z.object({
   history: z.array(MessageSchema),
 });
 export type ConversationalMentorInput = z.infer<typeof ConversationalMentorInputSchema>;
+
+// Improvement Roadmap Schemas
+export const ImprovementRoadmapInputSchema = z.object({
+    name: z.string(),
+    year: z.number(),
+    branch: z.string(),
+    skills: z.array(SkillSchema),
+    profileSummary: z.string(),
+});
+export type ImprovementRoadmapInput = z.infer<typeof ImprovementRoadmapInputSchema>;
+
+export const RoadmapStepSchema = z.object({
+    title: z.string().describe("The title of the improvement step."),
+    description: z.string().describe("A detailed description of the step and its importance."),
+    resources: z.string().describe("Suggested resources, tutorials, or projects to complete the step."),
+});
+
+export const ImprovementRoadmapOutputSchema = z.object({
+    roadmap: z.array(RoadmapStepSchema),
+});
+export type ImprovementRoadmapOutput = z.infer<typeof ImprovementRoadmapOutputSchema>;
 
 
 // Exporting the TypeScript types for use in the application code.
