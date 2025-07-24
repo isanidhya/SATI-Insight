@@ -3,30 +3,33 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Allow read access to all, but write access only for authenticated users to their own doc
-    match /users/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Rules for the new 'chats' collection
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Any authenticated user can read user profiles (for the discover page)
+      allow read: if isAuthenticated();
+
+      // Only the authenticated user can create or update their own profile
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Rules for the 'chats' collection
     match /chats/{chatId} {
-      // Users can only read/write chat documents they are members of
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.members;
+      // A user can read/write a chat document if they are a member of that chat
+      allow read, write: if isAuthenticated() && request.auth.uid in resource.data.members;
 
-      // Rules for messages within a chat
+      // Rules for the 'messages' subcollection within a chat
       match /messages/{messageId} {
-        // Users can read messages if they are part of the chat
-        allow read: if request.auth != null && get(/databases/$(database)/documents/chats/$(chatId)).data.members.hasAny([request.auth.uid]);
+        // A user can read messages if they are a member of the parent chat
+        allow read: if isAuthenticated() && get(/databases/$(database)/documents/chats/$(chatId)).data.members[0] == request.auth.uid || get(/databases/$(database)/documents/chats/$(chatId)).data.members[1] == request.auth.uid;
         
-        // Users can only create messages if they are part of the chat and are the sender
-        allow create: if request.auth != null 
-                      && get(/databases/$(database)/documents/chats/$(chatId)).data.members.hasAny([request.auth.uid])
-                      && request.resource.data.senderId == request.auth.uid;
-
-        // Don't allow updates or deletes to keep chat history immutable
-        allow update, delete: if false;
+        // A user can create a message if they are a member of the chat and the sender
+        allow create: if isAuthenticated() && (get(/databases/$(database)/documents/chats/$(chatId)).data.members[0] == request.auth.uid || get(/databases/$(database)/documents/chats/$(chatId)).data.members[1] == request.auth.uid) && request.resource.data.senderId == request.auth.uid;
       }
     }
   }
