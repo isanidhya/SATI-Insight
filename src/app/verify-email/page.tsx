@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { sendEmailVerification } from 'firebase/auth';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, MailCheck } from 'lucide-react';
-import { Logo } from '@/components/icons';
 
 export default function VerifyEmailPage() {
   const { user, logout } = useAuth();
@@ -44,12 +42,6 @@ export default function VerifyEmailPage() {
       setIsLoading(false);
     }
   };
-
-  // If user is somehow verified and lands here, redirect them.
-  if (user?.emailVerified) {
-    router.push('/dashboard');
-    return null;
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
