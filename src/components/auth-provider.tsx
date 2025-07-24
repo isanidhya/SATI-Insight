@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
@@ -18,7 +19,10 @@ interface AuthProviderProps {
 }
 
 const protectedRoutes = ['/dashboard'];
-const publicRoutes = ['/login', '/signup', '/'];
+const authRoutes = ['/login', '/signup'];
+const publicRoutes = ['/'];
+const verificationRoute = '/verify-email';
+
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
@@ -39,13 +43,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (loading) return;
 
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-    const isPublicRoute = publicRoutes.includes(pathname);
+    const isAuthRoute = authRoutes.includes(pathname);
+    const isVerificationRoute = pathname === verificationRoute;
 
-    if (!user && isProtectedRoute) {
-      router.push('/login');
-    } else if (user && (pathname === '/login' || pathname === '/signup')) {
-      router.push('/dashboard');
+    if (user) {
+      // User is logged in
+      if (!user.emailVerified) {
+        // If email is not verified, they can only be on the verification page
+        if (!isVerificationRoute) {
+          router.push(verificationRoute);
+        }
+      } else {
+        // If email is verified, they should not be on auth or verification pages
+        if (isAuthRoute || isVerificationRoute) {
+          router.push('/dashboard');
+        }
+      }
+    } else {
+      // User is not logged in
+      if (isProtectedRoute) {
+        router.push('/login');
+      }
     }
+
   }, [user, loading, pathname, router]);
 
 

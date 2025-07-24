@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -67,12 +67,15 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // 2. Update Firebase Auth profile
+      // 2. Send verification email
+      await sendEmailVerification(user);
+
+      // 3. Update Firebase Auth profile
       await updateProfile(user, {
         displayName: values.name,
       });
 
-      // 3. Create user document in Firestore with basic info
+      // 4. Create user document in Firestore with basic info
       const userDocRef = doc(db, 'users', user.uid);
       const { confirmPassword, ...userData } = values;
       await setDoc(userDocRef, {
@@ -81,22 +84,25 @@ export default function SignupPage() {
         createdAt: new Date(),
       });
 
-      // 4. Trigger the AI analysis flow
-      const aiProfileData = await analyzeAndBuildProfile({
+      // 5. Trigger the AI analysis flow in the background (no need to await)
+      analyzeAndBuildProfile({
           githubUrl: values.githubUrl,
           linkedinUrl: values.linkedinUrl,
           leetcodeUrl: values.leetcodeUrl,
+      }).then(aiProfileData => {
+          // 6. Update the user document with the AI-generated data
+          setDoc(userDocRef, { ...aiProfileData }, { merge: true });
+      }).catch(err => {
+          console.error("AI analysis failed on signup:", err);
+          // Optional: You could store a flag that analysis failed and retry later.
       });
-      
-      // 5. Update the user document with the AI-generated data
-      await setDoc(userDocRef, { ...aiProfileData }, { merge: true });
 
       toast({
           title: 'Account Created!',
-          description: "We've analyzed your profiles to build your skill portfolio.",
+          description: "We've sent a verification link to your email.",
       });
       
-      router.push('/dashboard');
+      router.push('/verify-email');
 
     } catch (error: any) {
       toast({
@@ -165,7 +171,7 @@ export default function SignupPage() {
                     </FormItem>
                 )} />
                 <FormField control={form.control} name="year" render={({ field }) => (
-                  <FormItem><FormLabel>Academic Year</FormLabel><Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                  <FormItem><FormLabel>Academic Year</FormLabel><Select onValueChange={(val) => field.onChange(Number(val))} defaultValue={String(field.value)}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger></FormControl>
                     <SelectContent>
                       {[1, 2, 3, 4].map(y => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
