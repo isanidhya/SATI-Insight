@@ -17,8 +17,8 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const protectedRoutes = ['/'];
-const publicRoutes = ['/login', '/signup'];
+const protectedRoutes = ['/dashboard'];
+const publicRoutes = ['/login', '/signup', '/'];
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
@@ -38,13 +38,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (loading) return;
 
-    const isProtectedRoute = protectedRoutes.includes(pathname);
+    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
     const isPublicRoute = publicRoutes.includes(pathname);
 
     if (!user && isProtectedRoute) {
       router.push('/login');
-    } else if (user && isPublicRoute) {
-      router.push('/');
+    } else if (user && (pathname === '/login' || pathname === '/signup')) {
+      router.push('/dashboard');
     }
   }, [user, loading, pathname, router]);
 
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
   };
 
-  if (loading && protectedRoutes.includes(pathname)) {
+  if (loading && protectedRoutes.some(route => pathname.startsWith(route))) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
 

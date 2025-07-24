@@ -25,7 +25,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -42,7 +42,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center items-center mb-4">
-             <Logo className="h-10 w-10 text-primary" />
+            <Link href="/" aria-label="Back to home">
+               <Logo className="h-10 w-10 text-primary" />
+            </Link>
           </div>
           <CardTitle className="text-2xl">Welcome Back!</CardTitle>
           <CardDescription>Enter your credentials to access your account</CardDescription>

@@ -100,7 +100,7 @@ export default function SignupPage() {
         });
       }
       
-      router.push('/');
+      router.push('/dashboard');
 
     } catch (error: any) {
       toast({
@@ -118,7 +118,9 @@ export default function SignupPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
             <div className="flex justify-center items-center mb-4">
-             <Logo className="h-10 w-10 text-primary" />
+             <Link href="/" aria-label="Back to home">
+               <Logo className="h-10 w-10 text-primary" />
+            </Link>
           </div>
           <CardTitle className="text-2xl">Create Your SATIInsight Profile</CardTitle>
           <CardDescription>Provide your details and let our AI do the rest.</CardDescription>
