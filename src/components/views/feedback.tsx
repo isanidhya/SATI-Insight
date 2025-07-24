@@ -52,6 +52,7 @@ export function FeedbackView() {
       const result = await getMentorFeedback({
         weeklyActivity: values.weeklyActivity,
         skills: studentSkills,
+        profileSummary: profile.profileSummary || 'No profile summary available.',
       });
       setFeedback(result.feedback);
     } catch (error: any) {

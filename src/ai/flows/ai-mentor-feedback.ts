@@ -27,8 +27,11 @@ const prompt = ai.definePrompt({
   model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an AI mentor providing personalized feedback to students based on their weekly activity and skills.
 
+  Use the student's profile summary for context about their overall strengths and areas for development.
+
   Provide constructive feedback and improvement tips to help the student enhance their skills and showcase them effectively.
 
+  Student Profile Summary: {{{profileSummary}}}
   Weekly Activity: {{{weeklyActivity}}}
   Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
   `,

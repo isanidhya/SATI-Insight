@@ -64,6 +64,7 @@ export const ValidateSkillsOutputSchema = z.object({
 export const MentorFeedbackInputSchema = z.object({
     weeklyActivity: z.string().describe("The student's description of their weekly activities."),
     skills: z.array(z.string()).describe("The list of the student's current skills."),
+    profileSummary: z.string().describe("The student's AI-generated profile summary."),
 });
 
 
