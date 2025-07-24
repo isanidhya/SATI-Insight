@@ -76,9 +76,9 @@ export const MentorFeedbackOutputSchema = z.object({
 
 // Define the input schema for the onboarding flow
 export const OnboardingInputSchema = z.object({
-  githubUrl: z.string().url().optional().describe('URL to the user\'s GitHub profile.'),
-  linkedinUrl: z.string().url().optional().describe('URL to the user\'s LinkedIn profile.'),
-  leetcodeUrl: z.string().url().optional().describe('URL to the user\'s LeetCode profile.'),
+  githubUrl: z.string().url().optional().describe("URL to the user's GitHub profile."),
+  linkedinUrl: z.string().url().optional().describe("URL to the user's LinkedIn profile."),
+  leetcodeUrl: z.string().url().optional().describe("URL to the user's LeetCode profile."),
 });
 export type OnboardingInput = z.infer<typeof OnboardingInputSchema>;
 
@@ -114,6 +114,9 @@ const UserProfileSchema = z.object({
   skills: z.array(SkillSchema).optional(),
   profileSummary: z.string().optional(),
   overallRating: z.number().optional(),
+  githubUrl: z.string().url().optional(),
+  linkedinUrl: z.string().url().optional(),
+  leetcodeUrl: z.string().url().optional(),
 });
 
 export const ConversationalMentorInputSchema = z.object({

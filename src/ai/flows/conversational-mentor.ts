@@ -23,6 +23,9 @@ Here is the student's profile:
 - Name: ${profile.name || 'N/A'}
 - Branch: ${profile.branch || 'N/A'}
 - Year: ${profile.year || 'N/A'}
+- GitHub: ${profile.githubUrl || 'N/A'}
+- LinkedIn: ${profile.linkedinUrl || 'N/A'}
+- LeetCode: ${profile.leetcodeUrl || 'N/A'}
 - Overall AI-Assessed Rating: ${profile.overallRating?.toFixed(1) || 'N/A'} / 5
 - AI-Generated Summary: ${profile.profileSummary || 'N/A'}
 - Verified Skills:
