@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -22,13 +23,19 @@ import { analyzeAndBuildProfile } from '@/ai/actions/onboarding';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').refine(email => email.endsWith('@satiengg.in'), {
+    message: 'Must be a valid SATI email address (@satiengg.in)',
+  }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
   branch: z.string().min(2, 'Branch is required'),
-  year: z.coerce.number().min(1).max(5, 'Year must be between 1 and 5'),
-  githubUrl: z.string().url('Invalid GitHub URL').optional().or(z.literal('')),
-  linkedinUrl: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
+  year: z.coerce.number().min(1).max(4, 'Year must be between 1 and 4'),
+  githubUrl: z.string().url('Invalid GitHub URL'),
+  linkedinUrl: z.string().url('Invalid LinkedIn URL'),
   leetcodeUrl: z.string().url('Invalid LeetCode URL').optional().or(z.literal('')),
+}).refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -44,6 +51,7 @@ export default function SignupPage() {
         name: '',
         email: '',
         password: '',
+        confirmPassword: '',
         branch: '',
         year: 1,
         githubUrl: '',
@@ -66,39 +74,27 @@ export default function SignupPage() {
 
       // 3. Create user document in Firestore with basic info
       const userDocRef = doc(db, 'users', user.uid);
+      const { confirmPassword, ...userData } = values;
       await setDoc(userDocRef, {
         uid: user.uid,
-        name: values.name,
-        email: values.email,
-        branch: values.branch,
-        year: values.year,
-        githubUrl: values.githubUrl,
-        linkedinUrl: values.linkedinUrl,
-        leetcodeUrl: values.leetcodeUrl,
+        ...userData,
         createdAt: new Date(),
       });
 
       // 4. Trigger the AI analysis flow
-      if (values.githubUrl || values.linkedinUrl || values.leetcodeUrl) {
-        const aiProfileData = await analyzeAndBuildProfile({
-            githubUrl: values.githubUrl,
-            linkedinUrl: values.linkedinUrl,
-            leetcodeUrl: values.leetcodeUrl,
-        });
-        
-        // 5. Update the user document with the AI-generated data
-        await setDoc(userDocRef, { ...aiProfileData }, { merge: true });
+      const aiProfileData = await analyzeAndBuildProfile({
+          githubUrl: values.githubUrl,
+          linkedinUrl: values.linkedinUrl,
+          leetcodeUrl: values.leetcodeUrl,
+      });
+      
+      // 5. Update the user document with the AI-generated data
+      await setDoc(userDocRef, { ...aiProfileData }, { merge: true });
 
-        toast({
-            title: 'Account Created!',
-            description: "We've analyzed your profiles to build your skill portfolio.",
-        });
-      } else {
-         toast({
-            title: 'Account Created!',
-            description: "Welcome to SATIInsight! Add your profiles later to build your skill portfolio.",
-        });
-      }
+      toast({
+          title: 'Account Created!',
+          description: "We've analyzed your profiles to build your skill portfolio.",
+      });
       
       router.push('/dashboard');
 
@@ -133,38 +129,61 @@ export default function SignupPage() {
                   <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
-                  <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="you@college.edu" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="you@satiengg.in" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
               </div>
               
-              <FormField control={form.control} name="password" render={({ field }) => (
-                <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
+               <div className="grid grid-cols-2 gap-4">
+                 <FormField control={form.control} name="password" render={({ field }) => (
+                    <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                 )} />
+                 <FormField control={form.control} name="confirmPassword" render={({ field }) => (
+                    <FormItem><FormLabel>Confirm Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                 )} />
+              </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="branch" render={({ field }) => (
-                  <FormItem><FormLabel>Branch</FormLabel><FormControl><Input placeholder="e.g., Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
+                 <FormField control={form.control} name="branch" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Branch</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="CSE">CSE</SelectItem>
+                                <SelectItem value="CSE(Block Chain)">CSE (Block Chain)</SelectItem>
+                                <SelectItem value="AIADS">AI & Data Science</SelectItem>
+                                <SelectItem value="AIML">AI & Machine Learning</SelectItem>
+                                <SelectItem value="IOT">Internet of Things (IoT)</SelectItem>
+                                <SelectItem value="IT">IT</SelectItem>
+                                <SelectItem value="EC">Electronics & Communication</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
                 )} />
                 <FormField control={form.control} name="year" render={({ field }) => (
                   <FormItem><FormLabel>Academic Year</FormLabel><Select onValueChange={field.onChange} defaultValue={String(field.value)}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5].map(y => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
+                      {[1, 2, 3, 4].map(y => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
                     </SelectContent>
                   </Select><FormMessage /></FormItem>
                 )} />
               </div>
 
               <div className="space-y-2">
-                 <p className="text-sm font-medium">Professional Profiles (Optional)</p>
+                 <p className="text-sm font-medium">Professional Profiles</p>
                  <FormField control={form.control} name="githubUrl" render={({ field }) => (
-                    <FormItem><FormControl><Input placeholder="GitHub Profile URL" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="sr-only">GitHub URL</FormLabel><FormControl><Input placeholder="GitHub Profile URL (Required)" {...field} /></FormControl><FormMessage /></FormItem>
                  )} />
                  <FormField control={form.control} name="linkedinUrl" render={({ field }) => (
-                    <FormItem><FormControl><Input placeholder="LinkedIn Profile URL" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="sr-only">LinkedIn URL</FormLabel><FormControl><Input placeholder="LinkedIn Profile URL (Required)" {...field} /></FormControl><FormMessage /></FormItem>
                  )} />
                  <FormField control={form.control} name="leetcodeUrl" render={({ field }) => (
-                    <FormItem><FormControl><Input placeholder="LeetCode Profile URL" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="sr-only">LeetCode URL</FormLabel><FormControl><Input placeholder="LeetCode Profile URL (Optional)" {...field} /></FormControl><FormMessage /></FormItem>
                  )} />
               </div>
 
