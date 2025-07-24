@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -7,6 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
 import {
   MentorFeedbackInputSchema,
   type MentorFeedbackInput,
@@ -22,6 +24,7 @@ const prompt = ai.definePrompt({
   name: 'mentorFeedbackPrompt',
   input: {schema: MentorFeedbackInputSchema},
   output: {schema: MentorFeedbackOutputSchema},
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an AI mentor providing personalized feedback to students based on their weekly activity and skills.
 
   Provide constructive feedback and improvement tips to help the student enhance their skills and showcase them effectively.
