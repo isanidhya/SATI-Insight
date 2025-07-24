@@ -1,5 +1,7 @@
 
 import { z } from 'zod';
+import type { User as UserProfile } from '@/lib/types';
+
 
 /**
  * Defines the schema for a single skill, including its name, rating, and evidence.
@@ -95,6 +97,30 @@ export const SocialProfileInputSchema = z.object({
 });
 
 export type SocialProfileInput = z.infer<typeof SocialProfileInputSchema>;
+
+// Conversational Mentor Schemas
+export const MessageSchema = z.object({
+  role: z.enum(['user', 'model']),
+  content: z.string(),
+});
+export type Message = z.infer<typeof MessageSchema>;
+
+const UserProfileSchema = z.object({
+  uid: z.string(),
+  name: z.string().optional(),
+  email: z.string().optional(),
+  branch: z.string().optional(),
+  year: z.number().optional(),
+  skills: z.array(SkillSchema).optional(),
+  profileSummary: z.string().optional(),
+  overallRating: z.number().optional(),
+});
+
+export const ConversationalMentorInputSchema = z.object({
+  profile: UserProfileSchema,
+  history: z.array(MessageSchema),
+});
+export type ConversationalMentorInput = z.infer<typeof ConversationalMentorInputSchema>;
 
 
 // Exporting the TypeScript types for use in the application code.
