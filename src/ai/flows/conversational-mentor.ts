@@ -5,30 +5,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { z } from 'zod';
-import { ConversationalMentorInputSchema, MessageSchema } from '@/lib/ai-types';
-
-const mentorPrompt = ai.definePrompt({
-  name: 'conversationalMentorPrompt',
-  system: `You are a helpful and friendly AI Mentor for university students. Your goal is to provide personalized guidance, career advice, and project suggestions.
-
-You have access to the student's profile information. Use this context to make your responses highly relevant and tailored to their specific situation.
-
-Here is the student's profile:
-- Name: {{profile.name}}
-- Branch: {{profile.branch}}
-- Year: {{profile.year}}
-- Overall AI-Assessed Rating: {{profile.overallRating}} / 5
-- AI-Generated Summary: {{profile.profileSummary}}
-- Verified Skills:
-{{#each profile.skills}}
-  - {{this.name}} (Rating: {{this.rating}}/5, Evidence: {{this.evidence}})
-{{/each}}
-
-Engage in a natural, supportive, and encouraging conversation. Keep your responses concise and easy to understand. Use markdown for formatting when appropriate.`,
-  input: { schema: ConversationalMentorInputSchema },
-  output: { schema: MessageSchema },
-});
+import { ConversationalMentorInputSchema, MessageSchema, type ConversationalMentorInput } from '@/lib/ai-types';
 
 export const conversationalMentorFlow = ai.defineFlow(
   {
@@ -37,13 +14,27 @@ export const conversationalMentorFlow = ai.defineFlow(
     outputSchema: MessageSchema,
   },
   async ({ profile, history }) => {
-    // The model must be passed directly to ai.generate, along with the system prompt and history.
+    // Manually construct the system prompt with the user's profile data.
+    const systemPrompt = `You are a helpful and friendly AI Mentor for university students. Your goal is to provide personalized guidance, career advice, and project suggestions.
+
+You have access to the student's profile information. Use this context to make your responses highly relevant and tailored to their specific situation.
+
+Here is the student's profile:
+- Name: ${profile.name || 'N/A'}
+- Branch: ${profile.branch || 'N/A'}
+- Year: ${profile.year || 'N/A'}
+- Overall AI-Assessed Rating: ${profile.overallRating?.toFixed(1) || 'N/A'} / 5
+- AI-Generated Summary: ${profile.profileSummary || 'N/A'}
+- Verified Skills:
+${(profile.skills || [])
+  .map(skill => `  - ${skill.name} (Rating: ${skill.rating}/5, Evidence: ${skill.evidence})`)
+  .join('\n') || '  No skills listed.'}
+
+Engage in a natural, supportive, and encouraging conversation. Keep your responses concise and easy to understand. Use markdown for formatting when appropriate.`;
+
     const response = await ai.generate({
       model: googleAI.model('gemini-1.5-flash-latest'),
-      system: {
-        ...mentorPrompt,
-        context: { profile },
-      },
+      system: systemPrompt,
       history,
     });
     
