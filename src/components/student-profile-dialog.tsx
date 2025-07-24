@@ -22,7 +22,7 @@ export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentP
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-6">
+      <DialogContent className="max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
         {/* Header Section */}
         <DialogHeader className="flex flex-row items-start gap-6 space-y-0 mb-4">
           <Avatar className="h-24 w-24 border">
