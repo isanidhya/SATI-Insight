@@ -15,13 +15,14 @@ import {
   doc,
   getDoc,
   Timestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import type { User as UserProfile } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2, User as UserIcon, Bot } from 'lucide-react';
+import { Send, Loader2, User as UserIcon, Bot, MessageSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -63,7 +64,11 @@ export function MessagesView({ initialChatId }: { initialChatId?: string | null 
           snapshot.docs.map(async (docData) => {
             const chat = docData.data();
             const otherMemberId = chat.members.find((id: string) => id !== user.uid);
+            // Handle case where otherMemberId might be undefined (self-chat, etc.)
+            if (!otherMemberId) return null;
             const userDoc = await getDoc(doc(db, 'users', otherMemberId));
+            if (!userDoc.exists()) return null; // Skip if the other user's profile doesn't exist
+
             const otherMember = { uid: userDoc.id, ...userDoc.data() } as UserProfile;
             return {
               id: docData.id,
@@ -73,22 +78,32 @@ export function MessagesView({ initialChatId }: { initialChatId?: string | null 
             };
           })
         );
-        setChats(chatsData);
+        
+        const validChats = chatsData.filter((chat): chat is Chat => chat !== null);
+        setChats(validChats);
+
+        // Always set loading to false after the first snapshot is processed.
         setLoadingChats(false);
 
         if (initialChatId && !selectedChat) {
-            const initialSelectedChat = chatsData.find(c => c.id === initialChatId);
+            const initialSelectedChat = validChats.find(c => c.id === initialChatId);
             if (initialSelectedChat) {
                 setSelectedChat(initialSelectedChat);
             }
-        } else if (!selectedChat && chatsData.length > 0) {
-            setSelectedChat(chatsData[0]);
+        } else if (!selectedChat && validChats.length > 0) {
+            setSelectedChat(validChats[0]);
         }
+      }, (error) => {
+          console.error("Error fetching chats:", error);
+          setLoadingChats(false); // Also stop loading on error
       });
 
       return () => unsubscribe();
+    } else if (!profileLoading) {
+      // If there's no user and we're not in a loading state, stop loading chats.
+      setLoadingChats(false);
     }
-  }, [user, initialChatId]);
+  }, [user, initialChatId, profileLoading]);
 
   useEffect(() => {
     if (selectedChat) {
@@ -105,9 +120,14 @@ export function MessagesView({ initialChatId }: { initialChatId?: string | null 
         })) as Message[];
         setMessages(messagesData);
         setLoadingMessages(false);
+      }, (error) => {
+          console.error(`Error fetching messages for chat ${selectedChat.id}:`, error);
+          setLoadingMessages(false);
       });
 
       return () => unsubscribe();
+    } else {
+        setMessages([]); // Clear messages if no chat is selected
     }
   }, [selectedChat]);
 
@@ -124,15 +144,24 @@ export function MessagesView({ initialChatId }: { initialChatId?: string | null 
     e.preventDefault();
     if (!newMessage.trim() || !selectedChat || !user) return;
 
-    await addDoc(collection(db, 'chats', selectedChat.id, 'messages'), {
+    const chatDocRef = doc(db, 'chats', selectedChat.id);
+
+    await addDoc(collection(chatDocRef, 'messages'), {
       senderId: user.uid,
       text: newMessage,
       timestamp: serverTimestamp(),
     });
+    
+    // Also update the last message on the chat document itself
+    await updateDoc(chatDocRef, {
+        lastMessage: newMessage,
+        lastMessageTimestamp: serverTimestamp(),
+    });
+
     setNewMessage('');
   };
 
-  if (profileLoading || loadingChats) {
+  if (profileLoading || (loadingChats && !chats.length)) {
     return (
       <div className="flex justify-center items-center h-full">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -172,7 +201,7 @@ export function MessagesView({ initialChatId }: { initialChatId?: string | null 
               )}
             </div>
           ))}
-           {chats.length === 0 && (
+           {chats.length === 0 && !loadingChats && (
                 <div className="text-center p-8 text-muted-foreground">No conversations yet.</div>
            )}
         </ScrollArea>
@@ -219,6 +248,11 @@ export function MessagesView({ initialChatId }: { initialChatId?: string | null 
                     </div>
                   ))
                 )}
+                 {messages.length === 0 && !loadingMessages && (
+                    <div className="text-center p-8 text-muted-foreground">
+                        This is the beginning of your conversation.
+                    </div>
+                 )}
               </div>
             </ScrollArea>
             <form onSubmit={handleSendMessage} className="p-4 border-t flex items-center gap-2">
