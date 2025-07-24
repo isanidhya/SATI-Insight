@@ -10,7 +10,6 @@ import { ConversationalMentorInputSchema, MessageSchema } from '@/lib/ai-types';
 
 const mentorPrompt = ai.definePrompt({
   name: 'conversationalMentorPrompt',
-  model: googleAI.model('gemini-1.5-flash-latest'),
   system: `You are a helpful and friendly AI Mentor for university students. Your goal is to provide personalized guidance, career advice, and project suggestions.
 
 You have access to the student's profile information. Use this context to make your responses highly relevant and tailored to their specific situation.
@@ -38,9 +37,10 @@ export const conversationalMentorFlow = ai.defineFlow(
     outputSchema: MessageSchema,
   },
   async ({ profile, history }) => {
+    // The model must be passed directly to ai.generate, along with the system prompt and history.
     const response = await ai.generate({
-      model: mentorPrompt.model,
-      prompt: {
+      model: googleAI.model('gemini-1.5-flash-latest'),
+      system: {
         ...mentorPrompt,
         context: { profile },
       },
