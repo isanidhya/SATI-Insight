@@ -5,7 +5,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import { ConversationalMentorInputSchema, MessageSchema, type ConversationalMentorInput } from '@/lib/ai-types';
+import { ConversationalMentorInputSchema, MessageSchema } from '@/lib/ai-types';
 
 export const conversationalMentorFlow = ai.defineFlow(
   {
