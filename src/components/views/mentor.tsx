@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast"
 import { Bot, Loader2 } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
+import ReactMarkdown from 'react-markdown';
 
 export function MentorView() {
   const { toast } = useToast();
@@ -99,7 +100,9 @@ export function MentorView() {
               <CardTitle className="text-lg">Mentor's Feedback</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap">{feedback}</p>
+              <article className="prose dark:prose-invert prose-sm max-w-none">
+                <ReactMarkdown>{feedback}</ReactMarkdown>
+              </article>
             </CardContent>
           </Card>
         )}
