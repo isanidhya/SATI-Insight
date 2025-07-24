@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,6 +11,7 @@ import { StudentCard } from '@/components/student-card';
 import { StudentProfileDialog } from '@/components/student-profile-dialog';
 import { Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MessagesView } from './messages';
 
 export function DiscoverView() {
   const [students, setStudents] = useState<User[]>([]);
@@ -18,12 +20,13 @@ export function DiscoverView() {
   const [academicYear, setAcademicYear] = useState('all');
   const [skillFilter, setSkillFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<User | null>(null);
+  const [showMessages, setShowMessages] = useState(false);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
       setLoading(true);
       try {
-        // Query to fetch users and sort them by overallRating in descending order
         const usersCollection = collection(db, 'users');
         const q = query(usersCollection, orderBy('overallRating', 'desc'));
         const userSnapshot = await getDocs(q);
@@ -31,7 +34,6 @@ export function DiscoverView() {
         setStudents(userList);
       } catch (error) {
         console.error("Error fetching students: ", error);
-        // Fallback for safety, e.g., if a user has no rating yet
         const usersCollection = collection(db, 'users');
         const userSnapshot = await getDocs(usersCollection);
         const userList = userSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
@@ -43,7 +45,6 @@ export function DiscoverView() {
     fetchStudents();
   }, []);
   
-  // Dynamically extract all unique skills from the student list
   const allSkills = useMemo(() => {
       const skillSet = new Set<string>();
       students.forEach(student => {
@@ -54,17 +55,12 @@ export function DiscoverView() {
 
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
-      // Safe access to student skills, providing an empty array as a fallback
       const studentSkills = student.skills || [];
-      
       const matchesYear = academicYear === 'all' || String(student.year) === academicYear;
-      
       const matchesQuery =
         searchQuery === '' ||
         student.name.toLowerCase().includes(searchQuery.toLowerCase());
-
       const matchesSkill = skillFilter === 'all' || studentSkills.some(s => s.name === skillFilter);
-
       return matchesYear && matchesQuery && matchesSkill;
     });
   }, [students, searchQuery, academicYear, skillFilter]);
@@ -72,6 +68,15 @@ export function DiscoverView() {
   const handleViewProfile = (student: User) => {
     setSelectedStudent(student);
   };
+
+  const handleNavigateToMessages = (chatId: string) => {
+    setActiveChatId(chatId);
+    setShowMessages(true);
+  };
+
+  if (showMessages) {
+    return <MessagesView initialChatId={activeChatId} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -130,6 +135,7 @@ export function DiscoverView() {
         student={selectedStudent}
         isOpen={!!selectedStudent}
         onOpenChange={(isOpen) => !isOpen && setSelectedStudent(null)}
+        onNavigateToMessages={handleNavigateToMessages}
       />
     </div>
   );

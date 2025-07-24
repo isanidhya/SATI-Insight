@@ -1,17 +1,50 @@
+
 import type { User } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { StarRating } from './star-rating';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Briefcase, FileText, Github, Linkedin, Code, Star } from 'lucide-react';
+import { Briefcase, FileText, Github, Linkedin, Code, Star, MessageSquare } from 'lucide-react';
+import { Button } from './ui/button';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 interface StudentProfileDialogProps {
   student: User | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  onNavigateToMessages?: (chatId: string) => void;
 }
 
-export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentProfileDialogProps) {
+export function StudentProfileDialog({ student, isOpen, onOpenChange, onNavigateToMessages }: StudentProfileDialogProps) {
+  const { user: currentUser } = useAuth();
+
+  const handleSendMessage = async () => {
+    if (!currentUser || !student || !onNavigateToMessages) return;
+
+    // Create a consistent chat ID
+    const chatId = [currentUser.uid, student.uid].sort().join('_');
+    const chatDocRef = doc(db, 'chats', chatId);
+
+    try {
+        const chatDoc = await getDoc(chatDocRef);
+        if (!chatDoc.exists()) {
+            await setDoc(chatDocRef, {
+                members: [currentUser.uid, student.uid],
+                createdAt: serverTimestamp(),
+                lastMessage: 'Chat started!',
+                lastMessageTimestamp: serverTimestamp(),
+            });
+        }
+        onNavigateToMessages(chatId);
+        onOpenChange(false); // Close dialog after navigating
+    } catch (error) {
+        console.error("Error creating or getting chat:", error);
+    }
+  };
+
   if (!student) return null;
 
   // Safe access to all potentially missing properties with fallbacks
@@ -23,7 +56,6 @@ export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentP
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
-        {/* Header Section */}
         <DialogHeader className="flex flex-row items-start gap-6 space-y-0 mb-4">
           <Avatar className="h-24 w-24 border">
             <AvatarFallback className="text-3xl">{studentName.charAt(0)}</AvatarFallback>
@@ -39,10 +71,12 @@ export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentP
                 {student.leetcodeUrl && <a href={student.leetcodeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary" aria-label="LeetCode Profile"><Code /></a>}
             </div>
           </div>
+           {currentUser && currentUser.uid !== student.uid && (
+            <Button onClick={handleSendMessage}><MessageSquare className="mr-2 h-4 w-4" /> Message</Button>
+          )}
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-            {/* Left Column: Summary and Rating */}
             <div className="md:col-span-1 space-y-6">
                  <Card>
                     <CardHeader>
@@ -62,7 +96,6 @@ export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentP
                     </CardContent>
                 </Card>
             </div>
-            {/* Right Column: Skills */}
             <div className="md:col-span-2">
                 <Card className="h-full">
                     <CardHeader>

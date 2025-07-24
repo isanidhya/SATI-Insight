@@ -22,12 +22,14 @@ export interface User {
   githubUrl?: string;
   linkedinUrl?: string;
   leetcodeUrl?: string;
+  photoURL?: string;
 
   // AI-Generated Profile Data (optional, added after async analysis)
   skills?: Skill[];
   profileSummary?: string;
   overallRating?: number; // AI-rated overall score from 1-5
 
-  // Timestamps
+  // Timestamps & Status
   createdAt: string; // Stored as an ISO string to be serializable
+  lastSeen?: string; // For online status, stored as ISO string
 }

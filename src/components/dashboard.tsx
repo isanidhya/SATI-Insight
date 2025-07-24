@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -20,11 +21,12 @@ import { SupportView } from './views/support';
 import { FeedbackView } from './views/feedback';
 import { ImprovementsView } from './views/improvements';
 import { Logo } from './icons';
-import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote, TrendingUp } from 'lucide-react';
+import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote, TrendingUp, MessageSquare } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
+import { MessagesView } from './views/messages';
 
-type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'improvements' | 'support';
+type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'improvements' | 'support' | 'messages';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
@@ -37,6 +39,7 @@ export function Dashboard() {
     feedback: 'Personalized Feedback',
     improvements: 'Improvement Roadmap',
     support: 'Support',
+    messages: 'Messages',
   };
 
   const renderView = () => {
@@ -51,6 +54,8 @@ export function Dashboard() {
         return <ImprovementsView />;
       case 'support':
         return <SupportView />;
+      case 'messages':
+        return <MessagesView />;
       case 'discover':
       default:
         return <DiscoverView />;
@@ -80,6 +85,12 @@ export function Dashboard() {
               <SidebarMenuButton onClick={() => setActiveView('my-profile')} isActive={activeView === 'my-profile'} tooltip="My Profile">
                 <UserCircle />
                 <span>My Profile</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveView('messages')} isActive={activeView === 'messages'} tooltip="Messages">
+                <MessageSquare />
+                <span>Messages</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
