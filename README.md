@@ -1,15 +1,15 @@
-# SATI Insight
+# SATIInsight: AI-Powered Talent Discovery & Mentorship Platform
 
-SATI Insight is an AI-powered platform designed to bridge the gap between students and industry professionals. It provides a comprehensive solution for skill validation, talent discovery, and mentorship, leveraging the power of AI to create a dynamic and supportive ecosystem for students to showcase their abilities and for recruiters and mentors to find the right talent.
+SATIInsight is a modern, AI-powered platform designed to bridge the gap between talented students and the professional world. It offers a comprehensive ecosystem for skill validation, talent discovery, and real-time communication, empowering students to showcase their abilities and enabling recruiters and mentors to find and connect with the right individuals. By leveraging generative AI, SATIInsight provides a dynamic, transparent, and supportive environment for career growth and networking.
 
 ## Core Features
 
-- **AI Skill Validator**: Assesses student skills based on public data (like GitHub, LinkedIn) and verified projects, providing a 1-5 star rating for a quick and reliable skill assessment.
-- **Dynamic Skill Showcase**: Allows students to display their validated skills and projects with direct links to the evidence, creating a transparent and verifiable portfolio.
-- **Creative Talent Exhibition**: Provides a space for students to showcase their non-technical talents through videos, portfolios, and social media links, offering a holistic view of their capabilities.
-- **Advanced Talent Search**: Empowers recruiters and mentors to filter and search for talent based on specific skills, academic year, and other criteria, making it easier to find the right fit.
-- **Personalized AI Mentor**: Delivers tailored feedback and actionable insights based on a student's weekly activities and progress, fostering continuous learning and improvement.
-- **Secure and Role-Based Authentication**: Ensures that only authorized users can access the platform, with specific roles and permissions for students, recruiters, and mentors.
+- **AI Skill Validator**: Automatically assesses and rates student skills (1-5 stars) by analyzing public profiles from GitHub, LinkedIn, and LeetCode, providing a quick and reliable assessment of their capabilities.
+- **Dynamic Skill Showcase**: Allows students to display their validated skills and projects with direct links to the evidence, creating a transparent and verifiable digital portfolio.
+- **Real-Time Messaging**: A built-in chat system powered by Firebase allows recruiters, mentors, and students to connect and communicate directly within the platform, fostering seamless interaction.
+- **Advanced Talent Search**: Empowers recruiters and mentors to filter and search for talent based on specific skills, academic year, and overall rating, making it easy to find the perfect candidate.
+- **Personalized AI Mentor**: Delivers tailored feedback, career advice, and actionable improvement roadmaps based on a student's unique profile and activities, fostering continuous learning.
+- **Secure Role-Based Authentication**: Ensures that only authorized users can access the platform, with specific permissions for students, recruiters, and mentors.
 
 ## Getting Started
 
@@ -37,10 +37,11 @@ To get a local copy up and running, follow these simple steps.
 
 ## Technologies Used
 
-- [Next.js](https.nextjs.org/) - React Framework
-- [Firebase](https://firebase.google.com/) - Backend Platform
+- [Next.js](https://nextjs.org/) - React Framework
+- [Firebase](https://firebase.google.com/) - Authentication & Realtime Database (Firestore)
 - [Tailwind CSS](https://tailwindcss.com/) - CSS Framework
-- [Genkit](https://firebase.google.com/docs/genkit) - AI Framework
+- [ShadCN UI](https://ui.shadcn.com/) - Component Library
+- [Genkit](https://firebase.google.com/docs/genkit) - AI Framework for Generative Models
 
 ## Contributing
 
