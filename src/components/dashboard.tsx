@@ -18,12 +18,13 @@ import { DiscoverView } from './views/discover';
 import { MyProfile } from './views/my-profile';
 import { MentorView } from './views/mentor';
 import { SupportView } from './views/support';
+import { FeedbackView } from './views/feedback';
 import { Logo } from './icons';
-import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy } from 'lucide-react';
+import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 
-type View = 'discover' | 'my-profile' | 'mentor' | 'support';
+type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'support';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
@@ -33,6 +34,7 @@ export function Dashboard() {
     discover: 'Discover Talent',
     'my-profile': 'My Profile',
     mentor: 'AI Mentor',
+    feedback: 'Personalized Feedback',
     support: 'Support',
   };
 
@@ -42,6 +44,8 @@ export function Dashboard() {
         return <MyProfile />;
       case 'mentor':
         return <MentorView />;
+      case 'feedback':
+        return <FeedbackView />;
       case 'support':
         return <SupportView />;
       case 'discover':
@@ -79,6 +83,12 @@ export function Dashboard() {
               <SidebarMenuButton onClick={() => setActiveView('mentor')} isActive={activeView === 'mentor'} tooltip="AI Mentor">
                 <Bot />
                 <span>AI Mentor</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveView('feedback')} isActive={activeView === 'feedback'} tooltip="Feedback">
+                <MessageSquareQuote />
+                <span>Feedback</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
