@@ -2,11 +2,38 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow any authenticated user to read the list of users for the discover page.
-    // A user can only write to their own document.
+
+    // USERS COLLECTION
+    // Authenticated users can read and list all profiles for the discover feature.
+    // A user can only create, update, or delete their own profile.
     match /users/{userId} {
-      allow read: if request.auth != null;
+      allow list, read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // OTHER COLLECTIONS (maintaining original security)
+    match /skills/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /proofs/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /showcases/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /feedback/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /publicFeed/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true; // Server/admin only
     }
   }
 }
