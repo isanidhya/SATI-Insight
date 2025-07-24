@@ -31,6 +31,7 @@ type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'improvements' |
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
   const { user, logout } = useAuth();
+  const [initialChatId, setInitialChatId] = useState<string | null>(null);
 
   const viewTitles: Record<View, string> = {
     discover: 'Discover Talent',
@@ -40,6 +41,11 @@ export function Dashboard() {
     improvements: 'Improvement Roadmap',
     support: 'Support',
     messages: 'Messages',
+  };
+
+  const handleNavigateToMessages = (chatId: string) => {
+    setInitialChatId(chatId);
+    setActiveView('messages');
   };
 
   const renderView = () => {
@@ -55,10 +61,10 @@ export function Dashboard() {
       case 'support':
         return <SupportView />;
       case 'messages':
-        return <MessagesView />;
+        return <MessagesView initialChatId={initialChatId} />;
       case 'discover':
       default:
-        return <DiscoverView />;
+        return <DiscoverView onNavigateToMessages={handleNavigateToMessages} />;
     }
   };
   

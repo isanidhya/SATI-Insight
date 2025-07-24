@@ -11,17 +11,18 @@ import { StudentCard } from '@/components/student-card';
 import { StudentProfileDialog } from '@/components/student-profile-dialog';
 import { Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessagesView } from './messages';
 
-export function DiscoverView() {
+interface DiscoverViewProps {
+  onNavigateToMessages: (chatId: string) => void;
+}
+
+export function DiscoverView({ onNavigateToMessages }: DiscoverViewProps) {
   const [students, setStudents] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [academicYear, setAcademicYear] = useState('all');
   const [skillFilter, setSkillFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<User | null>(null);
-  const [showMessages, setShowMessages] = useState(false);
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -34,6 +35,7 @@ export function DiscoverView() {
         setStudents(userList);
       } catch (error) {
         console.error("Error fetching students: ", error);
+        // Fallback to fetching without ordering if index is not ready
         const usersCollection = collection(db, 'users');
         const userSnapshot = await getDocs(usersCollection);
         const userList = userSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
@@ -59,7 +61,7 @@ export function DiscoverView() {
       const matchesYear = academicYear === 'all' || String(student.year) === academicYear;
       const matchesQuery =
         searchQuery === '' ||
-        student.name.toLowerCase().includes(searchQuery.toLowerCase());
+        (student.name && student.name.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesSkill = skillFilter === 'all' || studentSkills.some(s => s.name === skillFilter);
       return matchesYear && matchesQuery && matchesSkill;
     });
@@ -68,15 +70,6 @@ export function DiscoverView() {
   const handleViewProfile = (student: User) => {
     setSelectedStudent(student);
   };
-
-  const handleNavigateToMessages = (chatId: string) => {
-    setActiveChatId(chatId);
-    setShowMessages(true);
-  };
-
-  if (showMessages) {
-    return <MessagesView initialChatId={activeChatId} />;
-  }
 
   return (
     <div className="space-y-6">
@@ -135,7 +128,7 @@ export function DiscoverView() {
         student={selectedStudent}
         isOpen={!!selectedStudent}
         onOpenChange={(isOpen) => !isOpen && setSelectedStudent(null)}
-        onNavigateToMessages={handleNavigateToMessages}
+        onNavigateToMessages={onNavigateToMessages}
       />
     </div>
   );
