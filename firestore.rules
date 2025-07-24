@@ -1,35 +1,21 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if a user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // Rules for the 'users' collection
+    // Users can read any profile, but only write to their own.
     match /users/{userId} {
-      // Any authenticated user can read user profiles (for the discover page)
-      allow read: if isAuthenticated();
-
-      // Only the authenticated user can create or update their own profile
-      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
     }
 
-    // Rules for the 'chats' collection
+    // A user can only access a chat if they are a member of it.
     match /chats/{chatId} {
-      // A user can read/write a chat document if they are a member of that chat
-      allow read, write: if isAuthenticated() && request.auth.uid in resource.data.members;
+      allow read, write: if request.auth.uid in resource.data.members;
 
-      // Rules for the 'messages' subcollection within a chat
+      // Messages can only be accessed by members of the parent chat.
       match /messages/{messageId} {
-        // A user can read messages if they are a member of the parent chat
-        allow read: if isAuthenticated() && get(/databases/$(database)/documents/chats/$(chatId)).data.members[0] == request.auth.uid || get(/databases/$(database)/documents/chats/$(chatId)).data.members[1] == request.auth.uid;
-        
-        // A user can create a message if they are a member of the chat and the sender
-        allow create: if isAuthenticated() && (get(/databases/$(database)/documents/chats/$(chatId)).data.members[0] == request.auth.uid || get(/databases/$(database)/documents/chats/$(chatId)).data.members[1] == request.auth.uid) && request.resource.data.senderId == request.auth.uid;
+        allow read, write: if get(/databases/$(database)/documents/chats/$(chatId)).data.members.hasAny([request.auth.uid]);
       }
     }
   }
