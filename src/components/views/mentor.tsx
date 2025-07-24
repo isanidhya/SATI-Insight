@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,27 +8,25 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast"
 import { Bot, Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
-import type { Skill } from '@/lib/types';
-
+import { useUser } from '@/hooks/use-user';
 
 export function MentorView() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useUser();
   const [weeklyActivity, setWeeklyActivity] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // This is a placeholder since we don't have a database for skills yet.
-  const userSkills =  [
-        { name: 'React', rating: 4, verified: true, proof: 'https://github.com/johndoe/project-x' },
-        { name: 'Node.js', rating: 5, verified: true, proof: 'https://github.com/johndoe/project-y' },
-        { name: 'TypeScript', rating: 3, verified: true, proof: 'https://github.com/johndoe/project-z' },
-        { name: 'SQL', rating: 2, verified: false },
-    ];
-
 
   const handleGetFeedback = async () => {
+    if (!profile) {
+       toast({
+        variant: "destructive",
+        title: "Profile not loaded",
+        description: "Please wait for your profile to load before getting feedback.",
+      });
+      return;
+    }
+
     if (!weeklyActivity.trim()) {
       toast({
         variant: "destructive",
@@ -41,12 +40,14 @@ export function MentorView() {
     setFeedback('');
 
     try {
+      const userSkills = profile.skills?.map(s => s.name) || [];
       const result = await getMentorFeedback({
         weeklyActivity,
-        skills: userSkills.map(s => s.name),
+        skills: userSkills,
       });
       setFeedback(result.feedback);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("AI Mentor Error:", error);
       toast({
         variant: "destructive",
         title: "Failed to get feedback",
@@ -57,6 +58,14 @@ export function MentorView() {
     }
   };
 
+  if (profileLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
@@ -64,7 +73,7 @@ export function MentorView() {
           <Bot /> Your Personalized AI Mentor
         </CardTitle>
         <CardDescription>
-          Describe your weekly learning and project activities to get personalized feedback and improvement tips.
+          Describe your weekly learning and project activities to get personalized feedback and improvement tips based on your analyzed skills.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -79,7 +88,7 @@ export function MentorView() {
             className="mt-2"
           />
         </div>
-        <Button onClick={handleGetFeedback} disabled={isLoading}>
+        <Button onClick={handleGetFeedback} disabled={isLoading || profileLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Get Feedback
         </Button>
