@@ -14,9 +14,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'SATIInsight',
   description: 'AI-Powered Skill Validation and Talent Discovery Platform',
-  icons: {
-    icon: '/icon.svg',
-  }
 };
 
 export default function RootLayout({
