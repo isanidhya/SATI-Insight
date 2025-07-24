@@ -39,6 +39,7 @@ export const conversationalMentorFlow = ai.defineFlow(
   },
   async ({ profile, history }) => {
     const response = await ai.generate({
+      model: mentorPrompt.model,
       prompt: {
         ...mentorPrompt,
         context: { profile },
