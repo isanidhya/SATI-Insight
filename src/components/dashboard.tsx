@@ -18,13 +18,13 @@ import { DiscoverView } from './views/discover';
 import { MyProfile } from './views/my-profile';
 import { SupportView } from './views/support';
 import { AiMentorView } from './views/ai-mentor';
-import { ImprovementsView } from './views/improvements';
+import { GrowthPlanView } from './views/growth-plan';
 import { Logo } from './icons';
 import { Compass, UserCircle, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote, TrendingUp, Bot } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
 
-type View = 'discover' | 'my-profile' | 'ai-mentor' | 'improvements' | 'support';
+type View = 'discover' | 'my-profile' | 'ai-mentor' | 'growth-plan' | 'support';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
@@ -34,7 +34,7 @@ export function Dashboard() {
     discover: 'Discover Talent',
     'my-profile': 'My Profile',
     'ai-mentor': 'AI Mentor',
-    improvements: 'Improvement Roadmap',
+    'growth-plan': 'Growth Plan',
     support: 'Support',
   };
 
@@ -44,8 +44,8 @@ export function Dashboard() {
         return <MyProfile />;
       case 'ai-mentor':
         return <AiMentorView />;
-      case 'improvements':
-        return <ImprovementsView />;
+      case 'growth-plan':
+        return <GrowthPlanView />;
       case 'support':
         return <SupportView />;
       case 'discover':
@@ -86,9 +86,9 @@ export function Dashboard() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setActiveView('improvements')} isActive={activeView === 'improvements'} tooltip="Improvements">
+                <SidebarMenuButton onClick={() => setActiveView('growth-plan')} isActive={activeView === 'growth-plan'} tooltip="Growth Plan">
                     <TrendingUp />
-                    <span>Improvements</span>
+                    <span>Growth Plan</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

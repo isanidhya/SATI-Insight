@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import { getImprovementRoadmap } from '@/ai/actions/improvement-roadmap';
 import type { ImprovementRoadmapOutput } from '@/lib/ai-types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
-export function ImprovementsView() {
+export function GrowthPlanView() {
   const { toast } = useToast();
   const { profile, loading: profileLoading } = useUser();
   const [roadmap, setRoadmap] = useState<ImprovementRoadmapOutput | null>(null);
@@ -62,7 +63,7 @@ export function ImprovementsView() {
     <div className="max-w-4xl mx-auto space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Your Personalized Improvement Roadmap</CardTitle>
+          <CardTitle>Your Personalized Growth Plan</CardTitle>
           <CardDescription>
             Let our AI analyze your complete profile to generate a step-by-step roadmap for skill enhancement and career growth.
           </CardDescription>
@@ -70,7 +71,7 @@ export function ImprovementsView() {
         <CardContent className="text-center">
             <Button onClick={handleGenerateRoadmap} disabled={isLoading || profileLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                {roadmap ? 'Re-generate My Roadmap' : 'Generate My Roadmap'}
+                {roadmap ? 'Re-generate My Plan' : 'Generate My Growth Plan'}
             </Button>
         </CardContent>
       </Card>
@@ -79,7 +80,7 @@ export function ImprovementsView() {
          <Card>
             <CardContent className="p-6 flex items-center justify-center">
                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                 <p className="text-muted-foreground">Your AI mentor is building your personal roadmap...</p>
+                 <p className="text-muted-foreground">Your AI mentor is building your personal growth plan...</p>
             </CardContent>
         </Card>
       )}
@@ -87,7 +88,7 @@ export function ImprovementsView() {
       {roadmap && roadmap.roadmap.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Your 3-6 Month Roadmap</CardTitle>
+            <CardTitle>Your 3-6 Month Growth Plan</CardTitle>
              <CardDescription>
                 Follow these steps to level-up your skills and profile.
             </CardDescription>
