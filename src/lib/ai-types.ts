@@ -1,6 +1,5 @@
-import { z } from 'zod';
-import type { User as UserProfile } from '@/lib/types';
 
+import { z } from 'zod';
 
 /**
  * Defines the schema for a single skill, including its name, rating, and evidence.
@@ -105,22 +104,26 @@ export const MessageSchema = z.object({
 });
 export type Message = z.infer<typeof MessageSchema>;
 
-const UserProfileSchema = z.object({
+// This is the full user profile schema that the `getStudentProfile` tool will return.
+// It is marked as optional because some fields might not exist in Firestore.
+export const UserProfileSchema = z.object({
   uid: z.string(),
   name: z.string().optional(),
-  email: z.string().optional(),
+  email: z.string().email().optional(),
   branch: z.string().optional(),
   year: z.number().optional(),
   skills: z.array(SkillSchema).optional(),
   profileSummary: z.string().optional(),
   overallRating: z.number().optional(),
-  githubUrl: z.string().url().optional(),
-  linkedinUrl: z.string().url().optional(),
-  leetcodeUrl: z.string().url().optional(),
+  githubUrl: z.string().url().optional().or(z.literal('')),
+  linkedinUrl: z.string().url().optional().or(z.literal('')),
+  leetcodeUrl: z.string().url().optional().or(z.literal('')),
+  createdAt: z.string().optional(),
 });
+export type UserProfile = z.infer<typeof UserProfileSchema>;
 
 export const ConversationalMentorInputSchema = z.object({
-  profile: UserProfileSchema,
+  userId: z.string().describe("The UID of the user initiating the chat."),
   history: z.array(MessageSchema),
 });
 export type ConversationalMentorInput = z.infer<typeof ConversationalMentorInputSchema>;
