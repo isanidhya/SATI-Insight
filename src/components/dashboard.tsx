@@ -21,17 +21,15 @@ import { SupportView } from './views/support';
 import { FeedbackView } from './views/feedback';
 import { ImprovementsView } from './views/improvements';
 import { Logo } from './icons';
-import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote, TrendingUp, MessageSquare } from 'lucide-react';
+import { Compass, UserCircle, Bot, LogOut, Sun, Moon, Settings, LifeBuoy, MessageSquareQuote, TrendingUp } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth';
-import { MessagesView } from './views/messages';
 
-type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'improvements' | 'support' | 'messages';
+type View = 'discover' | 'my-profile' | 'mentor' | 'feedback' | 'improvements' | 'support';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<View>('discover');
   const { user, logout } = useAuth();
-  const [initialChatId, setInitialChatId] = useState<string | null>(null);
 
   const viewTitles: Record<View, string> = {
     discover: 'Discover Talent',
@@ -40,12 +38,6 @@ export function Dashboard() {
     feedback: 'Personalized Feedback',
     improvements: 'Improvement Roadmap',
     support: 'Support',
-    messages: 'Messages',
-  };
-
-  const handleNavigateToMessages = (chatId: string) => {
-    setInitialChatId(chatId);
-    setActiveView('messages');
   };
 
   const renderView = () => {
@@ -60,11 +52,9 @@ export function Dashboard() {
         return <ImprovementsView />;
       case 'support':
         return <SupportView />;
-      case 'messages':
-        return <MessagesView initialChatId={initialChatId} />;
       case 'discover':
       default:
-        return <DiscoverView onNavigateToMessages={handleNavigateToMessages} />;
+        return <DiscoverView />;
     }
   };
   
@@ -91,12 +81,6 @@ export function Dashboard() {
               <SidebarMenuButton onClick={() => setActiveView('my-profile')} isActive={activeView === 'my-profile'} tooltip="My Profile">
                 <UserCircle />
                 <span>My Profile</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setActiveView('messages')} isActive={activeView === 'messages'} tooltip="Messages">
-                <MessageSquare />
-                <span>Messages</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

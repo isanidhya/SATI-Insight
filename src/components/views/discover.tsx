@@ -12,11 +12,7 @@ import { StudentProfileDialog } from '@/components/student-profile-dialog';
 import { Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface DiscoverViewProps {
-  onNavigateToMessages: (chatId: string) => void;
-}
-
-export function DiscoverView({ onNavigateToMessages }: DiscoverViewProps) {
+export function DiscoverView() {
   const [students, setStudents] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,10 +32,14 @@ export function DiscoverView({ onNavigateToMessages }: DiscoverViewProps) {
       } catch (error) {
         console.error("Error fetching students: ", error);
         // Fallback to fetching without ordering if index is not ready
-        const usersCollection = collection(db, 'users');
-        const userSnapshot = await getDocs(usersCollection);
-        const userList = userSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
-        setStudents(userList);
+        try {
+            const usersCollection = collection(db, 'users');
+            const userSnapshot = await getDocs(usersCollection);
+            const userList = userSnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
+            setStudents(userList);
+        } catch (fallbackError) {
+            console.error("Fallback fetching failed too:", fallbackError);
+        }
       }
       setLoading(false);
     };
@@ -128,7 +128,6 @@ export function DiscoverView({ onNavigateToMessages }: DiscoverViewProps) {
         student={selectedStudent}
         isOpen={!!selectedStudent}
         onOpenChange={(isOpen) => !isOpen && setSelectedStudent(null)}
-        onNavigateToMessages={onNavigateToMessages}
       />
     </div>
   );

@@ -6,44 +6,16 @@ import { StarRating } from './star-rating';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Briefcase, FileText, Github, Linkedin, Code, Star, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
 
 interface StudentProfileDialogProps {
   student: User | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onNavigateToMessages?: (chatId: string) => void;
 }
 
-export function StudentProfileDialog({ student, isOpen, onOpenChange, onNavigateToMessages }: StudentProfileDialogProps) {
+export function StudentProfileDialog({ student, isOpen, onOpenChange }: StudentProfileDialogProps) {
   const { user: currentUser } = useAuth();
-
-  const handleSendMessage = async () => {
-    if (!currentUser || !student || !onNavigateToMessages) return;
-
-    // Create a consistent chat ID
-    const chatId = [currentUser.uid, student.uid].sort().join('_');
-    const chatDocRef = doc(db, 'chats', chatId);
-
-    try {
-        const chatDoc = await getDoc(chatDocRef);
-        if (!chatDoc.exists()) {
-            await setDoc(chatDocRef, {
-                members: [currentUser.uid, student.uid],
-                createdAt: serverTimestamp(),
-                lastMessage: 'Chat started!',
-                lastMessageTimestamp: serverTimestamp(),
-            });
-        }
-        onNavigateToMessages(chatId);
-        onOpenChange(false); // Close dialog after navigating
-    } catch (error) {
-        console.error("Error creating or getting chat:", error);
-    }
-  };
 
   if (!student) return null;
 
@@ -71,9 +43,6 @@ export function StudentProfileDialog({ student, isOpen, onOpenChange, onNavigate
                 {student.leetcodeUrl && <a href={student.leetcodeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary" aria-label="LeetCode Profile"><Code /></a>}
             </div>
           </div>
-           {currentUser && currentUser.uid !== student.uid && (
-            <Button onClick={handleSendMessage}><MessageSquare className="mr-2 h-4 w-4" /> Message</Button>
-          )}
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
