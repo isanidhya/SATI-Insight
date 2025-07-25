@@ -41,9 +41,18 @@ Engage in a natural, supportive, and encouraging conversation. Keep your respons
       history,
     });
     
+    // Defensive check to prevent crash if the model returns an empty response.
+    const responseText = response.text;
+    if (!responseText) {
+        return {
+            role: 'model',
+            content: "I'm sorry, I couldn't generate a response for that. Could you please try rephrasing your question?",
+        };
+    }
+
     return {
         role: 'model',
-        content: response.text,
+        content: responseText,
     };
   }
 );
